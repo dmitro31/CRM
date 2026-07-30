@@ -1,0 +1,315 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+
+  firstName   String
+  lastName    String?
+
+  phone       String?
+  avatar      String?
+
+  isActive    Boolean  @default(true)
+  isVerified  Boolean  @default(false)
+
+  ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
+  memberships     WorkspaceMember[]
+  uploadedFiles   File[]
+  notifications   Notification[]
+  auditLogs       AuditLog[]
+  createdRecords  Record[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Workspace {
+  id          String   @id @default(uuid())
+
+  name        String
+  slug        String   @unique
+  description String?
+  logo        String?
+
+  ownerId     String
+  owner        User @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+
+  members     WorkspaceMember[]
+  roles       Role[]
+  modules     Module[]
+  files       File[]
+  workflows   Workflow[]
+  auditLogs   AuditLog[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WorkspaceMember {
+  id          String   @id @default(uuid())
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  userId      String
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  roleId      String
+  role        Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  joinedAt    DateTime @default(now())
+
+  @@unique([workspaceId, userId])
+}
+
+model Role {
+  id          String   @id @default(uuid())
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+
+  permissions Json
+
+  members WorkspaceMember[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([workspaceId, name])
+}
+
+model Module {
+  id          String   @id @default(uuid())
+
+  name        String
+  key         String
+  description String?
+
+  icon        String?
+  color       String?
+
+  order       Int @default(0)
+
+  isActive    Boolean @default(true)
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  fields      Field[]
+  views       View[]
+  records     Record[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([workspaceId, key])
+  @@index([workspaceId])
+}
+
+enum FieldType {
+  TEXT
+  TEXTAREA
+  NUMBER
+  BOOLEAN
+  DATE
+  DATETIME
+  EMAIL
+  PHONE
+  URL
+  SELECT
+  MULTI_SELECT
+  FILE
+  IMAGE
+  RELATION
+}
+
+model Field {
+  id           String   @id @default(uuid())
+
+  name         String
+  key          String
+
+  type         FieldType
+
+  description  String?
+
+  required     Boolean @default(false)
+  unique       Boolean @default(false)
+
+  defaultValue Json?
+
+  placeholder  String?
+
+  order        Int
+
+  isActive     Boolean @default(true)
+
+  moduleId     String
+  module       Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([moduleId, key])
+  @@index([moduleId])
+}
+
+enum ViewType {
+  TABLE
+  BOARD
+  CALENDAR
+  LIST
+}
+
+model View {
+  id          String   @id @default(uuid())
+
+  name        String
+
+  type        ViewType @default(TABLE)
+
+  filters     Json?
+  sorting     Json?
+  columns     Json?
+
+  icon        String?
+  color       String?
+
+  isDefault   Boolean @default(false)
+
+  moduleId    String
+  module      Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([moduleId])
+}
+
+model Record {
+  id           String   @id @default(uuid())
+
+  moduleId     String
+  module       Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  data         Json
+
+  createdById  String
+  createdBy    User @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  isArchived   Boolean @default(false)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([moduleId])
+}
+
+model File {
+  id            String   @id @default(uuid())
+
+  name          String
+  originalName  String
+
+  path          String
+  extension     String
+  mimeType      String
+  size          Int
+
+  uploadedById  String
+  uploadedBy    User @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  workspaceId   String
+  workspace     Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+
+  @@index([workspaceId])
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+
+  title       String
+  message     String
+
+  type        NotificationType
+
+  link        String?
+
+  isRead      Boolean @default(false)
+
+  userId      String
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+
+  action      String
+  entity      String
+  entityId    String
+
+  oldData     Json?
+  newData     Json?
+
+  ipAddress   String?
+  userAgent   String?
+
+  userId      String
+  user        User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+
+  @@index([workspaceId])
+}
+
+model Workflow {
+  id          String   @id @default(uuid())
+
+  name        String
+
+  trigger     Json
+  conditions  Json?
+  actions     Json
+
+  enabled     Boolean @default(true)
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([workspaceId])
+}

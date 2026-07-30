@@ -1,0 +1,61 @@
+                                    User
+                                     │
+                                     │ 1
+                                     │
+                                     │ N
+                           WorkspaceMember
+                            ┌────────┴────────┐
+                            │                 │
+                            │ N               │ N
+                            │                 │
+                            ▼                 ▼
+                       Workspace           Role
+                            │                │
+                            │                │1
+                            │                │
+                            │                │N
+                            │           Permission
+                            │
+        ┌───────────────────┼─────────────────────┐
+        │                   │                     │
+        │                   │                     │
+        ▼                   ▼                     ▼
+     Module              File               Notification
+        │
+        │1
+        │
+        │N
+        ▼
+      Field
+        │
+        │1
+        │
+        │N
+        ▼
+      View
+
+        │
+        │
+        ▼
+
+      Record
+        │
+        │1
+        │
+        │N
+        ▼
+    RecordValue
+        │
+        │
+        ▼
+    RecordRelation
+
+Workspace
+    │
+    ▼
+Workflow
+
+Workspace
+    │
+    ▼
+AuditLog
