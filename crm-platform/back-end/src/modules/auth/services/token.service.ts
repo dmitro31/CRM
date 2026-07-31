@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common'
-import { JwtService, type JwtSignOptions } from '@nestjs/jwt'
 import { ConfigService } from '@nestjs/config'
+import { JwtService, JwtSignOptions } from '@nestjs/jwt'
+
+import { TokenPayload } from 'src/interfaces/token-payload.interface'
 
 @Injectable()
 export class TokenService {
@@ -9,28 +11,80 @@ export class TokenService {
     private readonly config: ConfigService,
   ) {}
 
-  private getJwtOptions(secretKey: string, expiresInKey: string): JwtSignOptions {
+  private getOptions(
+    secretKey: string,
+    expiresKey: string,
+  ): JwtSignOptions {
     return {
       secret: this.config.getOrThrow<string>(secretKey),
-      expiresIn: this.config.getOrThrow<string>(expiresInKey) as JwtSignOptions['expiresIn'],
+      expiresIn: this.config.getOrThrow<string | number>(
+        expiresKey,
+      ) as JwtSignOptions['expiresIn'],
     }
   }
 
-  async generateAccessToken(userId: string): Promise<string> {
+  async generateAccessToken(
+    payload: TokenPayload,
+  ): Promise<string> {
     return this.jwt.signAsync(
-      {
-        sub: userId,
-      },
-      this.getJwtOptions('jwt.accessSecret', 'jwt.accessExpiresIn'),
+      payload,
+      this.getOptions(
+        'jwt.accessSecret',
+        'jwt.accessExpiresIn',
+      ),
     )
   }
 
-  async generateRefreshToken(userId: string): Promise<string> {
+  async generateRefreshToken(
+    payload: TokenPayload,
+  ): Promise<string> {
     return this.jwt.signAsync(
+      payload,
+      this.getOptions(
+        'jwt.refreshSecret',
+        'jwt.refreshExpiresIn',
+      ),
+    )
+  }
+
+  async generateTokens(
+    payload: TokenPayload,
+  ) {
+    const accessToken =
+      await this.generateAccessToken(payload)
+
+    const refreshToken =
+      await this.generateRefreshToken(payload)
+
+    return {
+      accessToken,
+      refreshToken,
+    }
+  }
+
+  async verifyAccessToken(
+    token: string,
+  ): Promise<TokenPayload> {
+    return this.jwt.verifyAsync(
+      token,
       {
-        sub: userId,
+        secret: this.config.getOrThrow<string>(
+          'jwt.accessSecret',
+        ),
       },
-      this.getJwtOptions('jwt.refreshSecret', 'jwt.refreshExpiresIn'),
+    )
+  }
+
+  async verifyRefreshToken(
+    token: string,
+  ): Promise<TokenPayload> {
+    return this.jwt.verifyAsync(
+      token,
+      {
+        secret: this.config.getOrThrow<string>(
+          'jwt.refreshSecret',
+        ),
+      },
     )
   }
 }
