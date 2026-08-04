@@ -7,11 +7,20 @@ import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
 import { PasswordService } from './services/password.service'
 import { TokenService } from './services/token.service'
+import { MailModule } from '../mail/mail.module'
+import { VerificationTokenService } from './services/verification-token.service'
+import { PassportModule } from '@nestjs/passport'
+import { JwtStrategy } from './strategies/jwt.strategy'
+import { RefreshTokenService } from './services/refresh-token.service'
 
 @Module({
   imports: [
     PrismaModule,
     ConfigModule,
+    MailModule,
+    PassportModule.register({
+    defaultStrategy: 'jwt',
+    }),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService): JwtModuleOptions => ({
@@ -23,7 +32,7 @@ import { TokenService } from './services/token.service'
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, PasswordService, TokenService],
+  providers: [AuthService, PasswordService, TokenService , VerificationTokenService , JwtStrategy, RefreshTokenService],
   exports: [AuthService],
 })
 export class AuthModule {}

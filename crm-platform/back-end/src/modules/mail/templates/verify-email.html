@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+body{
+font-family:Arial,sans-serif;
+background:#f5f5f5;
+padding:40px;
+}
+.card{
+max-width:600px;
+margin:auto;
+background:white;
+padding:40px;
+border-radius:12px;
+}
+.button{
+display:inline-block;
+padding:14px 24px;
+background:#2563eb;
+color:white;
+text-decoration:none;
+border-radius:8px;
+margin-top:24px;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+
+<h1>Welcome {{name}}</h1>
+
+<p>
+Thank you for registering.
+</p>
+
+<p>
+Click the button below to verify your email.
+</p>
+
+<a class="button" href="{{url}}">
+Verify Email
+</a>
+
+<p style="margin-top:30px;">
+If you didn't create this account, ignore this email.
+</p>
+
+</div>
+
+</body>
+</html>

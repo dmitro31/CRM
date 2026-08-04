@@ -31,6 +31,7 @@ model User {
   notifications   Notification[]
   auditLogs       AuditLog[]
   createdRecords  Record[]
+  refreshTokens RefreshToken[]
   verificationToken VerificationToken?
 
   createdAt   DateTime @default(now())
@@ -335,4 +336,31 @@ model VerificationToken {
 enum VerificationTokenType {
   EMAIL_VERIFICATION
   PASSWORD_RESET
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+
+  tokenId    String   @unique
+
+  tokenHash  String
+
+  expiresAt  DateTime
+
+  createdAt  DateTime @default(now())
+
+  lastUsedAt DateTime?
+
+  userAgent  String?
+
+  ipAddress  String?
+
+  revokedAt  DateTime?
+
+  userId      String
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenId])
+  @@index([expiresAt])
 }

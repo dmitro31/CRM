@@ -87,4 +87,12 @@ export class TokenService {
       },
     )
   }
+
+  decode(
+    token: string,
+  ): TokenPayload | null {
+    return this.jwt.decode(
+      token,
+    ) as TokenPayload | null
+  }
 }
