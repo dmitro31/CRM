@@ -5,6 +5,7 @@ import {
   appConfig,
   databaseConfig,
   envValidationSchema,
+  googleConfig,
   jwtConfig,
 } from './config'
 
@@ -21,6 +22,7 @@ import { AuthModule } from './modules/auth/auth.module'
         appConfig,
         databaseConfig,
         jwtConfig,
+        googleConfig
       ],
       validationSchema: envValidationSchema,
     }),

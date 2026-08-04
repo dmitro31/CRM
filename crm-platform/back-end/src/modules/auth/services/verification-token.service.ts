@@ -34,4 +34,30 @@ export class VerificationTokenService {
 
         return token
     }
+
+    async createPasswordResetToken(
+  userId: string,
+) {
+  await this.prisma.verificationToken.deleteMany({
+    where: {
+      userId,
+      type: 'PASSWORD_RESET',
+    },
+  })
+
+  const token = randomBytes(32).toString('hex')
+
+  await this.prisma.verificationToken.create({
+    data: {
+      token,
+      userId,
+      type: 'PASSWORD_RESET',
+      expiresAt: new Date(
+        Date.now() + 1000 * 60 * 30,
+      ),
+    },
+  })
+
+  return token
+}
 }

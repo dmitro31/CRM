@@ -84,6 +84,12 @@ export class AuthService {
       )
     }
 
+    if (!user.password) {
+      throw new UnauthorizedException(
+        'Invalid email or password',
+      )
+    }
+
     const isPasswordValid =
       await this.passwordService.compare(
         dto.password,
@@ -340,6 +346,102 @@ async logoutAll(userId: string) {
 
   return {
     message: 'Logged out from all devices',
+  }
+}
+
+async forgotPassword(
+  email: string,
+) {
+  const user =
+    await this.prisma.user.findUnique({
+      where: {
+        email,
+      },
+    })
+
+  if (!user) {
+    return {
+      message:
+        'If this email exists, a reset link has been sent.',
+    }
+  }
+
+  const token =
+    await this.verificationTokenService.createPasswordResetToken(
+      user.id,
+    )
+
+  await this.mailService.sendPasswordResetEmail(
+    user.email,
+    user.firstName,
+    token,
+  )
+
+  return {
+    message:
+      'If this email exists, a reset link has been sent.',
+  }
+}
+
+async resetPassword(
+  token: string,
+  password: string,
+) {
+  const verification =
+    await this.prisma.verificationToken.findUnique({
+      where: {
+        token,
+      },
+    })
+
+  if (
+    !verification ||
+    verification.type !== 'PASSWORD_RESET'
+  ) {
+    throw new BadRequestException(
+      'Invalid token',
+    )
+  }
+
+  if (
+    verification.expiresAt < new Date()
+  ) {
+    throw new BadRequestException(
+      'Token expired',
+    )
+  }
+
+  const hashed =
+    await this.passwordService.hash(
+      password,
+    )
+
+  await this.prisma.$transaction([
+    this.prisma.user.update({
+      where: {
+        id: verification.userId,
+      },
+      data: {
+        password: hashed,
+      },
+    }),
+
+    this.prisma.verificationToken.delete({
+      where: {
+        id: verification.id,
+      },
+    }),
+
+    this.prisma.refreshToken.deleteMany({
+      where: {
+        userId: verification.userId,
+      },
+    }),
+  ])
+
+  return {
+    message:
+      'Password has been reset successfully.',
   }
 }
 }

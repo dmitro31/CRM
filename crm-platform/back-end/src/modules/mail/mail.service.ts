@@ -50,4 +50,44 @@ export class MailService {
         })
 
     }
+
+    async sendPasswordResetEmail(
+  email: string,
+  firstName: string,
+  token: string,
+) {
+  const appUrl =
+    this.config.getOrThrow<string>(
+      'mail.appUrl',
+    )
+
+  const templatePath = join(
+    process.cwd(),
+    'src',
+    'modules',
+    'mail',
+    'templates',
+    'reset-password.html',
+  )
+
+  let html = await readFile(
+    templatePath,
+    'utf8',
+  )
+
+  html = html
+    .replaceAll('{{name}}', firstName)
+    .replaceAll(
+      '{{url}}',
+      `${appUrl}/reset-password?token=${token}`,
+    )
+
+  await this.resend.emails.send({
+    from:
+      'CRM Platform <onboarding@resend.dev>',
+    to: email,
+    subject: 'Reset password',
+    html,
+  })
+}
 }

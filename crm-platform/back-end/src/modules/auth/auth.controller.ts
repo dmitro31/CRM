@@ -13,6 +13,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard'
 import { CurrentUser } from 'src/common/decorators/current-user.decorator'
 import type { User } from '@prisma/client'
 import { RefreshDto } from './dto/refresh.dto'
+import { ForgotPasswordDto } from './dto/forgot-password.dto'
+import { ResetPasswordDto } from './dto/reset-password.dto'
 
 @Controller('auth')
 export class AuthController {
@@ -86,6 +88,25 @@ logoutAll(
 ) {
   return this.authService.logoutAll(
     user.id,
+  )
+}
+
+@Post('forgot-password')
+forgotPassword(
+  @Body() dto: ForgotPasswordDto,
+) {
+  return this.authService.forgotPassword(
+    dto.email,
+  )
+}
+
+@Post('reset-password')
+resetPassword(
+  @Body() dto: ResetPasswordDto,
+) {
+  return this.authService.resetPassword(
+    dto.token,
+    dto.password,
   )
 }
 }

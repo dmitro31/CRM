@@ -12,6 +12,7 @@ import { VerificationTokenService } from './services/verification-token.service'
 import { PassportModule } from '@nestjs/passport'
 import { JwtStrategy } from './strategies/jwt.strategy'
 import { RefreshTokenService } from './services/refresh-token.service'
+import { GoogleStrategy } from './strategies/google.strategy'
 
 @Module({
   imports: [
@@ -32,7 +33,7 @@ import { RefreshTokenService } from './services/refresh-token.service'
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, PasswordService, TokenService , VerificationTokenService , JwtStrategy, RefreshTokenService],
+  providers: [AuthService, PasswordService, TokenService , VerificationTokenService , JwtStrategy, RefreshTokenService , GoogleStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}
