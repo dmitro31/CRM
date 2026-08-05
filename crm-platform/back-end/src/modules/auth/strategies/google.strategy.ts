@@ -1,39 +1,58 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { PassportStrategy } from '@nestjs/passport'
-import { Strategy, Profile, VerifyCallback } from 'passport-google-oauth20'
+import {
+  Strategy,
+  Profile,
+  VerifyCallback,
+} from 'passport-google-oauth20'
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(
-    Strategy,
-    'google',
+  Strategy,
+  'google',
 ) {
-    constructor(
-        config: ConfigService,
-    ) {
-        super({
-            clientID: config.getOrThrow('GOOGLE_CLIENT_ID'),
-            clientSecret: config.getOrThrow('GOOGLE_CLIENT_SECRET'),
-            callbackURL: config.getOrThrow('GOOGLE_CALLBACK_URL'),
-            scope: ['email', 'profile'],
-        })
-    }
+  constructor(
+    private readonly config: ConfigService,
+  ) {
+    super({
+      clientID: config.getOrThrow<string>(
+        'google.clientId',
+      ),
+      clientSecret: config.getOrThrow<string>(
+        'google.clientSecret',
+      ),
+      callbackURL: config.getOrThrow<string>(
+        'google.callbackUrl',
+      ),
+      scope: ['email', 'profile'],
+    })
+  }
 
-    async validate(
-        accessToken: string,
-        refreshToken: string,
-        profile: Profile,
-        done: VerifyCallback,
-    ) {
-        done(null, {
-            provider: 'GOOGLE',
-            providerId: profile.id,
-            email: profile.emails?.[0]?.value,
-            firstName: profile.name?.givenName,
-            lastName: profile.name?.familyName,
-            avatar: profile.photos?.[0]?.value,
-            accessToken,
-            refreshToken,
-        })
-    }
+  async validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: Profile,
+    done: VerifyCallback,
+  ) {
+    const {
+      id,
+      displayName,
+      emails,
+      photos,
+      name,
+    } = profile
+
+    done(null, {
+      googleId: id,
+      email: emails?.[0]?.value,
+      avatar: photos?.[0]?.value,
+      firstName:
+        name?.givenName ??
+        displayName.split(' ')[0],
+      lastName:
+        name?.familyName ??
+        displayName.split(' ').slice(1).join(' '),
+    })
+  }
 }

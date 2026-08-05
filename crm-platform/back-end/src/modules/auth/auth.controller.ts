@@ -2,9 +2,11 @@ import {
   Body,
   Controller,
   Get,
+  Req,
   Post,
   Query, UseGuards
 } from '@nestjs/common'
+import type { Request } from 'express'
 
 import { AuthService } from './auth.service'
 import { LoginDto } from './dto/login.dto'
@@ -15,6 +17,7 @@ import type { User } from '@prisma/client'
 import { RefreshDto } from './dto/refresh.dto'
 import { ForgotPasswordDto } from './dto/forgot-password.dto'
 import { ResetPasswordDto } from './dto/reset-password.dto'
+import { GoogleAuthGuard } from './guards/google-auth.guard'
 
 @Controller('auth')
 export class AuthController {
@@ -108,5 +111,17 @@ resetPassword(
     dto.token,
     dto.password,
   )
+}
+
+@UseGuards(GoogleAuthGuard)
+@Get('google')
+googleLogin() {}
+
+@UseGuards(GoogleAuthGuard)
+@Get('google/callback')
+googleCallback(
+  @Req() req: Request,
+) {
+  return req.user
 }
 }
