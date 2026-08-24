@@ -3,8 +3,8 @@ import { ConfigService } from '@nestjs/config'
 import { randomUUID } from 'crypto'
 import * as bcrypt from 'bcrypt'
 
-import { PrismaService } from 'src/core/database/prisma.service'
-import { TokenPayload } from 'src/interfaces/token-payload.interface'
+import { PrismaService } from 'core/database/prisma.service'
+import { TokenPayload } from 'interfaces/token-payload.interface'
 
 import { TokenService } from './token.service'
 

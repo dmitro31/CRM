@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { JwtModule, JwtModuleOptions, JwtSignOptions } from '@nestjs/jwt'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { PrismaModule } from 'src/core/database/prisma.module'
+import { PrismaModule } from 'core/database/prisma.module'
 
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
@@ -13,6 +13,7 @@ import { PassportModule } from '@nestjs/passport'
 import { JwtStrategy } from './strategies/jwt.strategy'
 import { RefreshTokenService } from './services/refresh-token.service'
 import { GoogleStrategy } from './strategies/google.strategy'
+import { GithubStrategy } from './strategies/github.strategy'
 
 @Module({
   imports: [
@@ -33,7 +34,7 @@ import { GoogleStrategy } from './strategies/google.strategy'
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, PasswordService, TokenService , VerificationTokenService , JwtStrategy, RefreshTokenService , GoogleStrategy],
+  providers: [AuthService, PasswordService, TokenService , VerificationTokenService , JwtStrategy, RefreshTokenService , GoogleStrategy , GithubStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

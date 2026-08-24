@@ -12,12 +12,13 @@ import { AuthService } from './auth.service'
 import { LoginDto } from './dto/login.dto'
 import { RegisterDto } from './dto/register.dto'
 import { JwtAuthGuard } from './guards/jwt-auth.guard'
-import { CurrentUser } from 'src/common/decorators/current-user.decorator'
+import { CurrentUser } from 'common/decorators/current-user.decorator'
 import type { User } from '@prisma/client'
 import { RefreshDto } from './dto/refresh.dto'
 import { ForgotPasswordDto } from './dto/forgot-password.dto'
 import { ResetPasswordDto } from './dto/reset-password.dto'
 import { GoogleAuthGuard } from './guards/google-auth.guard'
+import { AuthGuard } from '@nestjs/passport'
 
 @Controller('auth')
 export class AuthController {
@@ -76,52 +77,65 @@ export class AuthController {
   }
 
   @Post('logout')
-logout(
-  @Body() dto: RefreshDto,
-) {
-  return this.authService.logout(
-    dto.refreshToken,
-  )
-}
+  logout(
+    @Body() dto: RefreshDto,
+  ) {
+    return this.authService.logout(
+      dto.refreshToken,
+    )
+  }
 
-@UseGuards(JwtAuthGuard)
-@Post('logout-all')
-logoutAll(
-  @CurrentUser() user: User,
-) {
-  return this.authService.logoutAll(
-    user.id,
-  )
-}
+  @UseGuards(JwtAuthGuard)
+  @Post('logout-all')
+  logoutAll(
+    @CurrentUser() user: User,
+  ) {
+    return this.authService.logoutAll(
+      user.id,
+    )
+  }
 
-@Post('forgot-password')
-forgotPassword(
-  @Body() dto: ForgotPasswordDto,
-) {
-  return this.authService.forgotPassword(
-    dto.email,
-  )
-}
+  @Post('forgot-password')
+  forgotPassword(
+    @Body() dto: ForgotPasswordDto,
+  ) {
+    return this.authService.forgotPassword(
+      dto.email,
+    )
+  }
 
-@Post('reset-password')
-resetPassword(
-  @Body() dto: ResetPasswordDto,
-) {
-  return this.authService.resetPassword(
-    dto.token,
-    dto.password,
-  )
-}
+  @Post('reset-password')
+  resetPassword(
+    @Body() dto: ResetPasswordDto,
+  ) {
+    return this.authService.resetPassword(
+      dto.token,
+      dto.password,
+    )
+  }
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  googleAuth() { }
 
-@UseGuards(GoogleAuthGuard)
-@Get('google')
-googleLogin() {}
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleCallback(
+    @Req() req: any,
+  ) {
+    return this.authService.googleLogin(req.user)
+  }
 
-@UseGuards(GoogleAuthGuard)
-@Get('google/callback')
-googleCallback(
-  @Req() req: Request,
-) {
-  return req.user
-}
+  @Get('github')
+  @UseGuards(AuthGuard('github'))
+  github() { }
+
+  @Get('github/callback')
+  @UseGuards(AuthGuard('github'))
+  githubCallback(
+    @Req() req,
+  ) {
+    return this.authService.githubLogin(
+      req.user,
+    )
+  }
 }

@@ -7,7 +7,8 @@ import {
   envValidationSchema,
   googleConfig,
   jwtConfig,
-  mailConfig
+  mailConfig,
+  githubConfig
 } from './config'
 
 import { PrismaModule } from './core/database/prisma.module'
@@ -24,7 +25,8 @@ import { AuthModule } from './modules/auth/auth.module'
         databaseConfig,
         jwtConfig,
         googleConfig,
-        mailConfig
+        mailConfig,
+        githubConfig
       ],
       validationSchema: envValidationSchema,
     }),

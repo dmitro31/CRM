@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { randomBytes } from "crypto";
 
-import { PrismaService } from "src/core/database/prisma.service";
+import { PrismaService } from "core/database/prisma.service";
 
 @Injectable()
 export class VerificationTokenService {
