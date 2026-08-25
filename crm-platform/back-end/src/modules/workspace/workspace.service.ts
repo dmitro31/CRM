@@ -3,6 +3,7 @@ import {
     NotFoundException,
 } from '@nestjs/common'
 import { PrismaService } from 'core/database/prisma.service'
+import { slugify } from 'common/utils/slugify.util'
 
 import { CreateWorkspaceDto } from './dto/create-workspace.dto'
 import { UpdateWorkspaceDto } from './dto/update-workspace'
@@ -260,7 +261,7 @@ export class WorkspaceService {
     private async generateUniqueSlug(
         name: string,
     ): Promise<string> {
-        const baseSlug = this.slugify(name)
+        const baseSlug =slugify(name, 'workspace')
 
         let slug = baseSlug
         let counter = 1
@@ -285,63 +286,4 @@ export class WorkspaceService {
         }
     }
 
-    private slugify(value: string): string {
-        const transliteration: Record<string, string> = {
-            а: 'a',
-            б: 'b',
-            в: 'v',
-            г: 'h',
-            ґ: 'g',
-            д: 'd',
-            е: 'e',
-            є: 'ye',
-            ж: 'zh',
-            з: 'z',
-            и: 'y',
-            і: 'i',
-            ї: 'yi',
-            й: 'y',
-            к: 'k',
-            л: 'l',
-            м: 'm',
-            н: 'n',
-            о: 'o',
-            п: 'p',
-            р: 'r',
-            с: 's',
-            т: 't',
-            у: 'u',
-            ф: 'f',
-            х: 'kh',
-            ц: 'ts',
-            ч: 'ch',
-            ш: 'sh',
-            щ: 'shch',
-            ю: 'yu',
-            я: 'ya',
-            ь: '',
-            "'": '',
-            '’': '',
-            'ъ': '',
-            ы: 'y',
-            э: 'e',
-            ё: 'yo',
-        }
-
-        const normalized = value
-            .toLowerCase()
-            .split('')
-            .map(character =>
-                transliteration[character] ??
-                character,
-            )
-            .join('')
-
-        const slug = normalized
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-+|-+$/g, '')
-            .replace(/-+/g, '-')
-
-        return slug || 'workspace'
-    }
 }

@@ -73,6 +73,7 @@ model OAuthAccount {
 
 model Workspace {
   id          String   @id @default(uuid())
+  
   name        String
   slug        String   @unique
   description String?

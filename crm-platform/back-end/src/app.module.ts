@@ -13,7 +13,9 @@ import {
 
 import { PrismaModule } from './core/database/prisma.module'
 import { AuthModule } from './modules/auth/auth.module'
+import { MetadataModule } from 'modules/metadata/metadata.module'
 import { WorkspaceModule } from './modules/workspace/workspace.module'
+import { RecordModule } from 'modules/records/records.module'
 
 @Module({
   imports: [
@@ -34,6 +36,8 @@ import { WorkspaceModule } from './modules/workspace/workspace.module'
     PrismaModule,
     AuthModule,
     WorkspaceModule,
+    MetadataModule,
+    RecordModule
   ],
 })
 export class AppModule {}

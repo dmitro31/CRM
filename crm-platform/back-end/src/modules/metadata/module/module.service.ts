@@ -7,13 +7,14 @@ import { PrismaService } from 'core/database/prisma.service'
 import { WorkspaceAccessService } from 'modules/workspace/workspace-access.service'
 
 import { CreateModuleDto } from './dto/create-module.dto'
+import { slugify } from 'common/utils/slugify.util'
 import { UpdateModuleDto } from './dto/update-module.dto'
 
 @Injectable()
 export class ModuleService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly workspaceAccess: WorkspaceAccessService
+    private readonly workspaceAccess: WorkspaceAccessService,
   ) {}
 
   async create(
@@ -150,7 +151,7 @@ export class ModuleService {
     workspaceId: string,
     name: string,
   ): Promise<string> {
-    const baseKey = this.slugify(name)
+    const baseKey = slugify(name, 'module')
 
     let key = baseKey
     let counter = 1
@@ -175,15 +176,5 @@ export class ModuleService {
       counter += 1
       key = `${baseKey}-${counter}`
     }
-  }
-
-  private slugify(value: string): string {
-    const normalized = value
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .replace(/-+/g, '-')
-
-    return normalized || 'module'
   }
 }

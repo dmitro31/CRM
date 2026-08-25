@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common'
 import { PrismaService } from 'core/database/prisma.service'
 import { WorkspaceAccessService } from 'modules/workspace/workspace-access.service'
+import { slugify } from 'common/utils/slugify.util'
 
 import { CreateFieldDto } from './dto/create-field.dto'
 import { UpdateFieldDto } from './dto/update-field.dto'
@@ -94,7 +95,7 @@ export class FieldService {
         placeholder: dto.placeholder,
         order: dto.order,
         isActive: dto.isActive,
-      },
+      },  
     })
   }
 
@@ -139,7 +140,7 @@ export class FieldService {
     moduleId: string,
     name: string,
   ): Promise<string> {
-    const baseKey = this.slugify(name)
+    const baseKey = slugify(name, 'field')
 
     let key = baseKey
     let counter = 1
@@ -164,15 +165,5 @@ export class FieldService {
       counter += 1
       key = `${baseKey}-${counter}`
     }
-  }
-
-  private slugify(value: string): string {
-    const normalized = value
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .replace(/-+/g, '-')
-
-    return normalized || 'field'
   }
 }
