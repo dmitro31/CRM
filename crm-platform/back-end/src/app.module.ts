@@ -17,6 +17,8 @@ import { MetadataModule } from 'modules/metadata/metadata.module'
 import { WorkspaceModule } from './modules/workspace/workspace.module'
 import { RecordModule } from 'modules/records/records.module'
 import { InvitationModule } from 'modules/invitation/invitation.module'
+import { FilesModule } from 'modules/files/files.module'
+import storageConfig from 'config/storage.config'
 
 @Module({
   imports: [
@@ -31,6 +33,7 @@ import { InvitationModule } from 'modules/invitation/invitation.module'
         mailConfig,
         googleConfig,
         githubConfig,
+        storageConfig
       ],
       validationSchema: envValidationSchema,
     }),
@@ -39,7 +42,8 @@ import { InvitationModule } from 'modules/invitation/invitation.module'
     WorkspaceModule,
     MetadataModule,
     RecordModule,
-    InvitationModule
+    InvitationModule,
+    FilesModule
   ],
 })
 export class AppModule {}
