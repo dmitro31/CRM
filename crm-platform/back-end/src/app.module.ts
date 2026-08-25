@@ -16,6 +16,7 @@ import { AuthModule } from './modules/auth/auth.module'
 import { MetadataModule } from 'modules/metadata/metadata.module'
 import { WorkspaceModule } from './modules/workspace/workspace.module'
 import { RecordModule } from 'modules/records/records.module'
+import { InvitationModule } from 'modules/invitation/invitation.module'
 
 @Module({
   imports: [
@@ -37,7 +38,8 @@ import { RecordModule } from 'modules/records/records.module'
     AuthModule,
     WorkspaceModule,
     MetadataModule,
-    RecordModule
+    RecordModule,
+    InvitationModule
   ],
 })
 export class AppModule {}

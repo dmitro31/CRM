@@ -1,11 +1,11 @@
-import { ForbiddenException , Injectable , NotFoundException } from "@nestjs/common";
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "core/database/prisma.service";
 
 @Injectable()
 export class WorkspaceAccessService {
     constructor(
         private readonly prisma: PrismaService
-    ) {}
+    ) { }
 
     async ensureMembership(
         workspaceId: string,
@@ -20,11 +20,11 @@ export class WorkspaceAccessService {
             },
             select: {
                 id: true,
-                roleId: true 
+                roleId: true
             },
         })
 
-        if(!member) {
+        if (!member) {
             throw new NotFoundException(
                 'You are not a member of this workspace'
             )
@@ -47,14 +47,36 @@ export class WorkspaceAccessService {
             }
         })
 
-        if(!module) {
+        if (!module) {
             throw new NotFoundException(
                 'Module not found'
             )
         }
 
-        await this.ensureMembership(module.workspaceId , userId)
+        await this.ensureMembership(module.workspaceId, userId)
 
         return module
+    }
+
+
+    async ensureOwner(
+        workspaceId: string,
+        userId: string,
+    ) {
+        const workspace = await this.prisma.workspace.findFirst({
+            where: {
+                id: workspaceId,
+                ownerId: userId,
+            },
+            select: { id: true },
+        })
+
+        if (!workspace) {
+            throw new ForbiddenException(
+                'Only workspace owner can perform this action',
+            )
+        }
+
+        return workspace
     }
 }

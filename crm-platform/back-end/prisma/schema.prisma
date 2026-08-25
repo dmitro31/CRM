@@ -47,6 +47,8 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+   invitationsSent Invitation[] @relation("InvitationSender")
 }
 
 model OAuthAccount {
@@ -91,6 +93,8 @@ model Workspace {
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  invitations Invitation[]
 }
 
 model WorkspaceMember {
@@ -125,6 +129,8 @@ model Role {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+   invitations Invitation[]
 
   @@unique([workspaceId, name])
 }
@@ -397,4 +403,39 @@ model RefreshToken {
   @@index([userId])
   @@index([tokenId])
   @@index([expiresAt])
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+model Invitation {
+  id          String   @id @default(uuid())
+
+  email       String
+
+  token       String   @unique
+
+  status      InvitationStatus @default(PENDING)
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  roleId      String
+  role        Role @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  invitedById String
+  invitedBy   User @relation("InvitationSender", fields: [invitedById], references: [id], onDelete: Restrict)
+
+  expiresAt   DateTime
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([workspaceId, email, status])
+  @@index([workspaceId])
+  @@index([token])
 }
