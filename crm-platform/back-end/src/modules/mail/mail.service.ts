@@ -1,4 +1,4 @@
-import { Injectable, Res } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { Resend } from "resend"
 import { readFile } from 'node:fs/promises'
@@ -52,42 +52,72 @@ export class MailService {
     }
 
     async sendPasswordResetEmail(
-  email: string,
-  firstName: string,
-  token: string,
-) {
-  const appUrl =
-    this.config.getOrThrow<string>(
-      'mail.appUrl',
-    )
+        email: string,
+        firstName: string,
+        token: string,
+    ) {
+        const appUrl =
+            this.config.getOrThrow<string>('mail.appUrl')
 
-  const templatePath = join(
-    process.cwd(),
-    'src',
-    'modules',
-    'mail',
-    'templates',
-    'reset-password.html',
-  )
+        const templatePath = join(
+            process.cwd(),
+            'src',
+            'modules',
+            'mail',
+            'templates',
+            'reset-password.html',
+        )
 
-  let html = await readFile(
-    templatePath,
-    'utf8',
-  )
+        let html = await readFile(templatePath, 'utf8')
 
-  html = html
-    .replaceAll('{{name}}', firstName)
-    .replaceAll(
-      '{{url}}',
-      `${appUrl}/reset-password?token=${token}`,
-    )
+        html = html
+            .replaceAll('{{name}}', firstName)
+            .replaceAll(
+                '{{url}}',
+                `${appUrl}/reset-password?token=${token}`,
+            )
 
-  await this.resend.emails.send({
-    from:
-      'CRM Platform <onboarding@resend.dev>',
-    to: email,
-    subject: 'Reset password',
-    html,
-  })
-}
+        await this.resend.emails.send({
+            from: 'CRM Platform <onboarding@resend.dev>',
+            to: email,
+            subject: 'Reset password',
+            html,
+        })
+    }
+
+    async sendInvitationEmail(
+        email: string,
+        workspaceName: string,
+        roleName: string,
+        token: string,
+    ) {
+        const appUrl =
+            this.config.getOrThrow<string>('mail.appUrl')
+
+        const templatePath = join(
+            process.cwd(),
+            'src',
+            'modules',
+            'mail',
+            'templates',
+            'invite-workspace.html',
+        )
+
+        let html = await readFile(templatePath, 'utf8')
+
+        html = html
+            .replaceAll('{{workspaceName}}', workspaceName)
+            .replaceAll('{{roleName}}', roleName)
+            .replaceAll(
+                '{{url}}',
+                `${appUrl}/invitations/${token}`,
+            )
+
+        await this.resend.emails.send({
+            from: 'CRM Platform <onboarding@resend.dev>',
+            to: email,
+            subject: `Запрошення до ${workspaceName}`,
+            html,
+        })
+    }
 }

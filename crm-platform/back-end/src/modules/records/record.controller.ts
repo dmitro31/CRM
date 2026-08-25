@@ -23,7 +23,7 @@ import { RecordService } from './record.service'
 export class RecordController {
   constructor(
     private readonly recordService: RecordService,
-  ) {}
+  ) { }
 
   @Post('modules/:moduleId/records')
   create(
@@ -38,15 +38,9 @@ export class RecordController {
   findAll(
     @Param('moduleId') moduleId: string,
     @CurrentUser() user: User,
-    @Query('page') page?: string,
-    @Query('limit') limit?: string,
+    @Query() query: Record<string, string>,
   ) {
-    return this.recordService.findAll(
-      moduleId,
-      user.id,
-      page ? Number(page) : undefined,
-      limit ? Number(limit) : undefined,
-    )
+    return this.recordService.findAll(moduleId, user.id, query)
   }
 
   @Get('records/:id')

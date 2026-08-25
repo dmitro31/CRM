@@ -4,6 +4,7 @@ import {
 } from '@nestjs/common'
 import { PrismaService } from 'core/database/prisma.service'
 import { slugify } from 'common/utils/slugify.util'
+import { WorkspaceAccessService } from './workspace-access.service'
 
 import { CreateWorkspaceDto } from './dto/create-workspace.dto'
 import { UpdateWorkspaceDto } from './dto/update-workspace'
@@ -12,6 +13,8 @@ import { UpdateWorkspaceDto } from './dto/update-workspace'
 export class WorkspaceService {
     constructor(
         private readonly prisma: PrismaService,
+        private readonly workspaceAccess: WorkspaceAccessService
+
     ) { }
 
     async create(
@@ -196,15 +199,10 @@ export class WorkspaceService {
         userId: string,
         dto: UpdateWorkspaceDto,
     ) {
-        await this.ensureOwner(
-            workspaceId,
-            userId,
-        )
+        await this.workspaceAccess.ensureOwner(workspaceId, userId)
 
         return this.prisma.workspace.update({
-            where: {
-                id: workspaceId,
-            },
+            where: { id: workspaceId },
             data: {
                 name: dto.name,
                 description: dto.description,
@@ -217,22 +215,17 @@ export class WorkspaceService {
         workspaceId: string,
         userId: string,
     ) {
-        await this.ensureOwner(
-            workspaceId,
-            userId,
-        )
+        await this.workspaceAccess.ensureOwner(workspaceId, userId)
 
         await this.prisma.workspace.delete({
-            where: {
-                id: workspaceId,
-            },
+            where: { id: workspaceId },
         })
 
         return {
-            message:
-                'Workspace deleted successfully',
+            message: 'Workspace deleted successfully',
         }
     }
+
 
     private async ensureOwner(
         workspaceId: string,
@@ -261,7 +254,7 @@ export class WorkspaceService {
     private async generateUniqueSlug(
         name: string,
     ): Promise<string> {
-        const baseSlug =slugify(name, 'workspace')
+        const baseSlug = slugify(name, 'workspace')
 
         let slug = baseSlug
         let counter = 1

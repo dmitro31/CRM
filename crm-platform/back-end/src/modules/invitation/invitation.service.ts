@@ -29,17 +29,25 @@ export class InvitationService {
     userId: string,
     dto: CreateInvitationDto,
   ) {
-    const workspace = await this.workspaceAccess.ensureOwner(
+    await this.workspaceAccess.ensureOwner(
       workspaceId,
       userId,
     )
+
+    const workspace = await this.prisma.workspace.findUniqueOrThrow({
+      where: { id: workspaceId },
+      select: { name: true },
+    })
 
     const role = await this.prisma.role.findFirst({
       where: {
         id: dto.roleId,
         workspaceId,
       },
-      select: { id: true },
+      select: {
+        id: true,
+        name: true,
+      },
     })
 
     if (!role) {
@@ -101,19 +109,12 @@ export class InvitationService {
       },
     })
 
-    await (
-      this.mail as unknown as {
-        sendMail: (options: {
-          to: string
-          subject: string
-          html: string
-        }) => Promise<unknown>
-      }
-    ).sendMail({
-      to: dto.email,
-      subject: `Запрошення до ${workspace.id}`,
-      html: this.buildInvitationEmail(token),
-    })
+    await this.mail.sendInvitationEmail(
+      dto.email,
+      workspace.name,
+      role.name,
+      token,
+    )
 
     return invitation
   }
@@ -248,10 +249,5 @@ export class InvitationService {
     }
 
     return invitation
-  }
-
-  private buildInvitationEmail(token: string): string {
-    return `<p>Тебе запросили до workspace. Перейди за посиланням, щоб приєднатись:</p>
-      <a href="${process.env.FRONTEND_URL}/invitations/${token}">Прийняти запрошення</a>`
   }
 }

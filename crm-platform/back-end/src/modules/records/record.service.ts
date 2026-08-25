@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common'
-import { Field, FieldType } from '@prisma/client'
+import { Field, FieldType, Prisma } from '@prisma/client'
 import { PrismaService } from 'core/database/prisma.service'
 import { WorkspaceAccessService } from 'modules/workspace/workspace-access.service'
 
@@ -15,7 +15,7 @@ export class RecordService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workspaceAccess: WorkspaceAccessService,
-  ) {}
+  ) { }
 
   async create(
     moduleId: string,
@@ -44,29 +44,67 @@ export class RecordService {
   async findAll(
     moduleId: string,
     userId: string,
-    page = 1,
-    limit = 20,
+    query: Record<string, string>,
   ) {
     await this.workspaceAccess.ensureModuleAccess(moduleId, userId)
 
+    const fields = await this.prisma.field.findMany({
+      where: { moduleId, isActive: true },
+    })
+
+    const page = Number(query.page) || 1
+    const limit = Math.min(Number(query.limit) || 20, 100)
+
+    const sortBy = query.sortBy ?? 'createdAt'
+    const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc'
+
+    const allowedSortFields = ['createdAt', 'updatedAt']
+
+    if (!allowedSortFields.includes(sortBy)) {
+      throw new BadRequestException(
+        `Sorting by "${sortBy}" is not supported yet, use one of: ${allowedSortFields.join(', ')}`,
+      )
+    }
+
+    const reservedKeys = ['page', 'limit', 'sortBy', 'sortOrder']
+
+    const filterEntries = Object.entries(query).filter(
+      ([key]) => !reservedKeys.includes(key),
+    )
+
+    const conditions: Prisma.RecordWhereInput[] = filterEntries.map(([key, rawValue]) => {
+      const field = fields.find(f => f.key === key)
+
+      if (!field) {
+        throw new BadRequestException(
+          `Unknown filter field "${key}"`,
+        )
+      }
+
+      return {
+        data: {
+          path: [key],
+          equals: this.castFilterValue(field, rawValue),
+        } as any,
+      }
+    })
+
+    const where: Prisma.RecordWhereInput = {
+      moduleId,
+      isArchived: false,
+      ...(conditions.length > 0 && { AND: conditions }),
+    }
+
     const [items, total] = await this.prisma.$transaction([
       this.prisma.record.findMany({
-        where: {
-          moduleId,
-          isArchived: false,
-        },
+        where,
         skip: (page - 1) * limit,
         take: limit,
         orderBy: {
-          createdAt: 'desc',
+          [sortBy]: sortOrder,
         },
       }),
-      this.prisma.record.count({
-        where: {
-          moduleId,
-          isArchived: false,
-        },
-      }),
+      this.prisma.record.count({ where }),
     ])
 
     return {
@@ -74,6 +112,34 @@ export class RecordService {
       total,
       page,
       limit,
+    }
+  }
+
+  private castFilterValue(
+    field: Field,
+    rawValue: string,
+  ): unknown {
+    switch (field.type) {
+      case FieldType.NUMBER: {
+        const value = Number(rawValue)
+        if (Number.isNaN(value)) {
+          throw new BadRequestException(
+            `Filter value for "${field.name}" must be a number`,
+          )
+        }
+        return value
+      }
+
+      case FieldType.BOOLEAN: {
+        if (rawValue === 'true') return true
+        if (rawValue === 'false') return false
+        throw new BadRequestException(
+          `Filter value for "${field.name}" must be true or false`,
+        )
+      }
+
+      default:
+        return rawValue
     }
   }
 
