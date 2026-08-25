@@ -5,14 +5,15 @@ import {
   appConfig,
   databaseConfig,
   envValidationSchema,
+  githubConfig,
   googleConfig,
   jwtConfig,
   mailConfig,
-  githubConfig
 } from './config'
 
 import { PrismaModule } from './core/database/prisma.module'
 import { AuthModule } from './modules/auth/auth.module'
+import { WorkspaceModule } from './modules/workspace/workspace.module'
 
 @Module({
   imports: [
@@ -24,15 +25,15 @@ import { AuthModule } from './modules/auth/auth.module'
         appConfig,
         databaseConfig,
         jwtConfig,
-        googleConfig,
         mailConfig,
-        githubConfig
+        googleConfig,
+        githubConfig,
       ],
       validationSchema: envValidationSchema,
     }),
-
     PrismaModule,
     AuthModule,
+    WorkspaceModule,
   ],
 })
 export class AppModule {}

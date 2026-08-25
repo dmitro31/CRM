@@ -73,7 +73,6 @@ model OAuthAccount {
 
 model Workspace {
   id          String   @id @default(uuid())
-
   name        String
   slug        String   @unique
   description String?
@@ -188,6 +187,8 @@ model Field {
   unique       Boolean @default(false)
 
   defaultValue Json?
+
+  options Json?
 
   placeholder  String?
 
