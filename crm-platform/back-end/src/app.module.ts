@@ -21,6 +21,8 @@ import { FilesModule } from 'modules/files/files.module'
 import storageConfig from 'config/storage.config'
 import redisConfig from 'config/redis.config'
 import { WorkflowModule } from 'modules/workflow/workflow.module'
+import aiConfig from 'config/ai.config'
+import { AiModule } from 'modules/ai/ai.module'
 
 @Module({
   imports: [
@@ -36,7 +38,8 @@ import { WorkflowModule } from 'modules/workflow/workflow.module'
         googleConfig,
         githubConfig,
         storageConfig,
-        redisConfig
+        redisConfig,
+        aiConfig
       ],
       validationSchema: envValidationSchema,
     }),
@@ -46,7 +49,8 @@ import { WorkflowModule } from 'modules/workflow/workflow.module'
     MetadataModule,
     RecordModule,
     FilesModule,
-    WorkflowModule
+    WorkflowModule,
+    AiModule
   ],
 })
 export class AppModule {}

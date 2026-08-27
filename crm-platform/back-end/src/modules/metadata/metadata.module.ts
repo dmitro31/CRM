@@ -13,5 +13,6 @@ import { ViewService } from './view/view.service'
   imports: [WorkspaceModule],
   controllers: [ModuleController, FieldController, ViewController],
   providers: [ModuleService, FieldService, ViewService],
+  exports: [ModuleService, FieldService],
 })
 export class MetadataModule {}
