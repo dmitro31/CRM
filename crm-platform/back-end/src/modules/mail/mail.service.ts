@@ -31,7 +31,7 @@ export class MailService {
             'mail',
             'templates',
             'verify-email.html',
-        )   
+        )
 
         let html = await readFile(templatePath, 'utf8')
 
@@ -118,6 +118,19 @@ export class MailService {
             to: email,
             subject: `Запрошення до ${workspaceName}`,
             html,
+        })
+    }
+
+    async sendWorkflowEmail(
+        email: string,
+        subject: string,
+        body: string,
+    ) {
+        await this.resend.emails.send({
+            from: 'CRM Platform <onboarding@resend.dev>',
+            to: email,
+            subject,
+            html: `<p>${body}</p>`,
         })
     }
 }

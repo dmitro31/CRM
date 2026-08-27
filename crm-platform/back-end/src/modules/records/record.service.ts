@@ -6,6 +6,7 @@ import {
 import { Field, FieldType, Prisma } from '@prisma/client'
 import { PrismaService } from 'core/database/prisma.service'
 import { WorkspaceAccessService } from 'modules/workspace/workspace-access.service'
+import { WorkflowEventsService } from 'modules/workflow/workflow-events.service'
 
 import { CreateRecordDto } from './dto/create-record.dto'
 import { UpdateRecordDto } from './dto/update-record.dto'
@@ -15,6 +16,7 @@ export class RecordService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workspaceAccess: WorkspaceAccessService,
+    private readonly workflowEvents: WorkflowEventsService,
   ) { }
 
   async create(
@@ -32,13 +34,27 @@ export class RecordService {
       partial: false,
     })
 
-    return this.prisma.record.create({
+    const record = await this.prisma.record.create({
       data: {
         moduleId,
         data: dto.data as any,
         createdById: userId,
       },
     })
+
+    await this.workflowEvents.emit({
+      workspaceId: (await this.prisma.module.findUniqueOrThrow({
+        where: { id: moduleId },
+        select: { workspaceId: true },
+      })).workspaceId,
+      moduleId,
+      recordId: record.id,
+      event: 'RECORD_CREATED',
+      previousData: null,
+      currentData: record.data as Record<string, unknown>,
+    })
+
+    return record
   }
 
   async findAll(
@@ -187,7 +203,7 @@ export class RecordService {
       },
     )
 
-    return this.prisma.record.update({
+    const updated = await this.prisma.record.update({
       where: { id: recordId },
       data: {
         data: {
@@ -196,6 +212,20 @@ export class RecordService {
         } as any,
       },
     })
+
+    await this.workflowEvents.emit({
+      workspaceId: (await this.prisma.module.findUniqueOrThrow({
+        where: { id: record.moduleId },
+        select: { workspaceId: true },
+      })).workspaceId,
+      moduleId: record.moduleId,
+      recordId: updated.id,
+      event: 'RECORD_UPDATED',
+      previousData: record.data as Record<string, unknown>,
+      currentData: updated.data as Record<string, unknown>,
+    })
+
+    return updated
   }
 
   async remove(

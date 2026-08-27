@@ -19,6 +19,8 @@ import { RecordModule } from 'modules/records/records.module'
 import { InvitationModule } from 'modules/invitation/invitation.module'
 import { FilesModule } from 'modules/files/files.module'
 import storageConfig from 'config/storage.config'
+import redisConfig from 'config/redis.config'
+import { WorkflowModule } from 'modules/workflow/workflow.module'
 
 @Module({
   imports: [
@@ -33,7 +35,8 @@ import storageConfig from 'config/storage.config'
         mailConfig,
         googleConfig,
         githubConfig,
-        storageConfig
+        storageConfig,
+        redisConfig
       ],
       validationSchema: envValidationSchema,
     }),
@@ -42,8 +45,8 @@ import storageConfig from 'config/storage.config'
     WorkspaceModule,
     MetadataModule,
     RecordModule,
-    InvitationModule,
-    FilesModule
+    FilesModule,
+    WorkflowModule
   ],
 })
 export class AppModule {}
