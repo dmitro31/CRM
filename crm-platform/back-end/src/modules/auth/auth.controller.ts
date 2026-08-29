@@ -1,12 +1,16 @@
 import {
   Body,
   Controller,
+  ForbiddenException,
   Get,
   Req,
+  Res,
   Post,
-  Query, UseGuards
+  Query,
+  UseGuards,
 } from '@nestjs/common'
-import type { Request } from 'express'
+import type { Request, Response } from 'express'
+import { randomUUID } from 'crypto'
 
 import { AuthService } from './auth.service'
 import { LoginDto } from './dto/login.dto'
@@ -14,51 +18,85 @@ import { RegisterDto } from './dto/register.dto'
 import { JwtAuthGuard } from './guards/jwt-auth.guard'
 import { CurrentUser } from 'common/decorators/current-user.decorator'
 import type { User } from '@prisma/client'
-import { RefreshDto } from './dto/refresh.dto'
 import { ForgotPasswordDto } from './dto/forgot-password.dto'
 import { ResetPasswordDto } from './dto/reset-password.dto'
 import { GoogleAuthGuard } from './guards/google-auth.guard'
 import { AuthGuard } from '@nestjs/passport'
+import { Throttle } from '@nestjs/throttler'
+import { CsrfGuard } from './guards/csrf.guard'
+
+const REFRESH_COOKIE_NAME = 'refreshToken'
+const CSRF_COOKIE_NAME = 'csrfToken'
+const REFRESH_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-  ) { }
+  ) {}
 
-  @Post('register')
-  register(
-    @Body() dto: RegisterDto,
+  private setAuthCookies(
+    res: Response,
+    refreshToken: string,
   ) {
+    const csrfToken = randomUUID()
+    const isProduction = process.env.NODE_ENV === 'production'
+
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: REFRESH_COOKIE_MAX_AGE,
+    })
+
+    res.cookie(CSRF_COOKIE_NAME, csrfToken, {
+      httpOnly: false,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: REFRESH_COOKIE_MAX_AGE,
+    })
+  }
+
+  private clearAuthCookies(res: Response) {
+    res.clearCookie(REFRESH_COOKIE_NAME)
+    res.clearCookie(CSRF_COOKIE_NAME)
+  }
+
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @Post('register')
+  register(@Body() dto: RegisterDto) {
     return this.authService.register(dto)
   }
 
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('login')
-  login(
+  async login(
     @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    return this.authService.login(dto)
+    const result = await this.authService.login(dto)
+
+    this.setAuthCookies(res, result.refreshToken)
+
+    return {
+      user: result.user,
+      accessToken: result.accessToken,
+    }
   }
 
   @Post('resend-verification')
-  resendVerification(
-    @Body('email') email: string,
-  ) {
+  resendVerification(@Body('email') email: string) {
     return this.authService.resendVerificationEmail(email)
   }
 
   @Get('verify-email')
-  verifyEmail(
-    @Query('token') token: string,
-  ) {
+  verifyEmail(@Query('token') token: string) {
     return this.authService.verifyEmail(token)
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  me(
-    @CurrentUser() user: User,
-  ) {
+  me(@CurrentUser() user: User) {
     return {
       id: user.id,
       email: user.email,
@@ -69,73 +107,106 @@ export class AuthController {
     }
   }
 
+  @UseGuards(CsrfGuard)
   @Post('refresh')
-  refresh(
-    @Body() dto: RefreshDto,
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    return this.authService.refresh(dto.refreshToken)
+    const refreshToken = req.cookies?.[REFRESH_COOKIE_NAME]
+
+    if (!refreshToken) {
+      this.clearAuthCookies(res)
+      throw new ForbiddenException('No refresh token provided')
+    }
+
+    const result = await this.authService.refresh(refreshToken)
+
+    this.setAuthCookies(res, result.refreshToken)
+
+    return { accessToken: result.accessToken }
   }
 
+  @UseGuards(CsrfGuard)
   @Post('logout')
-  logout(
-    @Body() dto: RefreshDto,
+  async logout(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    return this.authService.logout(
-      dto.refreshToken,
-    )
+    const refreshToken = req.cookies?.[REFRESH_COOKIE_NAME]
+
+    if (refreshToken) {
+      await this.authService.logout(refreshToken)
+    }
+
+    this.clearAuthCookies(res)
+
+    return { message: 'Logged out successfully' }
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('logout-all')
-  logoutAll(
+  async logoutAll(
     @CurrentUser() user: User,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    return this.authService.logoutAll(
-      user.id,
-    )
+    await this.authService.logoutAll(user.id)
+
+    this.clearAuthCookies(res)
+
+    return { message: 'Logged out from all devices' }
   }
 
   @Post('forgot-password')
-  forgotPassword(
-    @Body() dto: ForgotPasswordDto,
-  ) {
-    return this.authService.forgotPassword(
-      dto.email,
-    )
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email)
   }
 
   @Post('reset-password')
-  resetPassword(
-    @Body() dto: ResetPasswordDto,
-  ) {
+  resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(
       dto.token,
       dto.password,
     )
   }
+
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  googleAuth() { }
+  googleAuth() {}
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleCallback(
     @Req() req: any,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    return this.authService.googleLogin(req.user)
+    const result = await this.authService.googleLogin(req.user)
+
+    this.setAuthCookies(res, result.refreshToken)
+
+    return {
+      user: result.user,
+      accessToken: result.accessToken,
+    }
   }
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  github() { }
+  github() {}
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
-  githubCallback(
-    @Req() req,
+  async githubCallback(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    return this.authService.githubLogin(
-      req.user,
-    )
+    const result = await this.authService.githubLogin(req.user)
+
+    this.setAuthCookies(res, result.refreshToken)
+
+    return {
+      user: result.user,
+      accessToken: result.accessToken,
+    }
   }
 }

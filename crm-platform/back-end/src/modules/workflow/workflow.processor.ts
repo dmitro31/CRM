@@ -1,22 +1,23 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq'
-import { Logger } from '@nestjs/common'
 import { Job } from 'bullmq'
 import { PrismaService } from 'core/database/prisma.service'
 import { MailService } from 'modules/mail/mail.service'
 import { WORKFLOWS_QUEUE } from 'core/queue/queue.module'
+import { PinoLogger, InjectPinoLogger } from 'nestjs-pino'
 
 import { ConditionOperator } from './dto/condition.dto'
 import { ActionType } from './dto/action.dto'
 import { WorkflowEvent } from './dto/trigger.dto'
 import { WorkflowEventPayload } from './workflow-events.service'
+import { WorkflowEvaluator } from './workflow-evaluator'
 
 @Processor(WORKFLOWS_QUEUE)
 export class WorkflowProcessor extends WorkerHost {
-  private readonly logger = new Logger(WorkflowProcessor.name)
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
+    @InjectPinoLogger(WorkflowProcessor.name)
+    private readonly logger: PinoLogger,
   ) {
     super()
   }
@@ -38,12 +39,8 @@ export class WorkflowProcessor extends WorkerHost {
     for (const workflow of workflows) {
       const trigger = workflow.trigger as any
 
-      const matchesEvent = this.matchesTrigger(
-        trigger,
-        event,
-        previousData,
-        currentData,
-      )
+      const matchesEvent = WorkflowEvaluator.matchesTrigger(
+        trigger, event, previousData, currentData,)
 
       if (!matchesEvent) {
         continue
@@ -52,7 +49,7 @@ export class WorkflowProcessor extends WorkerHost {
       const conditions = (workflow.conditions as any[]) ?? []
 
       const conditionsPass = conditions.every(condition =>
-        this.evaluateCondition(condition, currentData),
+        WorkflowEvaluator.evaluateCondition(condition, currentData),
       )
 
       if (!conditionsPass) {
@@ -71,79 +68,17 @@ export class WorkflowProcessor extends WorkerHost {
           })
         } catch (error) {
           this.logger.error(
+            {
+              err: error,
+              workflowId: workflow.id,
+              actionType: action.type,
+            },
             `Failed to execute action "${action.type}" for workflow "${workflow.id}"`,
-            error instanceof Error ? error.stack : undefined,
           )
         }
       }
     }
   }
-
-  private matchesTrigger(
-    trigger: any,
-    event: WorkflowEventPayload['event'],
-    previousData: Record<string, unknown> | null,
-    currentData: Record<string, unknown>,
-  ): boolean {
-    if (trigger.event === WorkflowEvent.RECORD_CREATED) {
-      return event === 'RECORD_CREATED'
-    }
-
-    if (trigger.event === WorkflowEvent.RECORD_UPDATED) {
-      return event === 'RECORD_UPDATED'
-    }
-
-    if (trigger.event === WorkflowEvent.FIELD_CHANGED) {
-      if (event !== 'RECORD_UPDATED' || !previousData) {
-        return false
-      }
-
-      const fieldKey = trigger.fieldKey
-
-      if (!fieldKey) {
-        return false
-      }
-
-      return (
-        previousData[fieldKey] !== currentData[fieldKey]
-      )
-    }
-
-    return false
-  }
-
-  private evaluateCondition(
-    condition: {
-      fieldKey: string
-      operator: ConditionOperator
-      value: unknown
-    },
-    data: Record<string, unknown>,
-  ): boolean {
-    const actual = data[condition.fieldKey]
-
-    switch (condition.operator) {
-      case ConditionOperator.EQUALS:
-        return actual === condition.value
-      case ConditionOperator.NOT_EQUALS:
-        return actual !== condition.value
-      case ConditionOperator.GT:
-        return (
-          typeof actual === 'number' &&
-          typeof condition.value === 'number' &&
-          actual > condition.value
-        )
-      case ConditionOperator.LT:
-        return (
-          typeof actual === 'number' &&
-          typeof condition.value === 'number' &&
-          actual < condition.value
-        )
-      default:
-        return false
-    }
-  }
-
   private async executeAction(
     action: any,
     context: {
