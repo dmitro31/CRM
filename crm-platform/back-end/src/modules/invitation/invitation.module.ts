@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common'
+import { Module } from '@nestjs/common';
 
-import { MailModule } from 'modules/mail/mail.module'
-import { WorkspaceModule } from 'modules/workspace/workspace.module'
+import { MailModule } from 'modules/mail/mail.module';
+import { WorkspaceModule } from 'modules/workspace/workspace.module';
 
-import { InvitationController } from './invitation.controller'
-import { InvitationService } from './invitation.service'
+import { InvitationController } from './invitation.controller';
+import { InvitationService } from './invitation.service';
 
 @Module({
   imports: [MailModule, WorkspaceModule],

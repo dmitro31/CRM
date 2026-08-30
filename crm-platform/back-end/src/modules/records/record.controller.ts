@@ -8,22 +8,20 @@ import {
   Post,
   Query,
   UseGuards,
-} from '@nestjs/common'
-import type { User } from '@prisma/client'
+} from '@nestjs/common';
+import type { User } from '@prisma/client';
 
-import { CurrentUser } from 'common/decorators/current-user.decorator'
-import { JwtAuthGuard } from 'modules/auth/guards/jwt-auth.guard'
+import { CurrentUser } from 'common/decorators/current-user.decorator';
+import { JwtAuthGuard } from 'modules/auth/guards/jwt-auth.guard';
 
-import { CreateRecordDto } from './dto/create-record.dto'
-import { UpdateRecordDto } from './dto/update-record.dto'
-import { RecordService } from './record.service'
+import { CreateRecordDto } from './dto/create-record.dto';
+import { UpdateRecordDto } from './dto/update-record.dto';
+import { RecordService } from './record.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class RecordController {
-  constructor(
-    private readonly recordService: RecordService,
-  ) { }
+  constructor(private readonly recordService: RecordService) {}
 
   @Post('modules/:moduleId/records')
   create(
@@ -31,7 +29,7 @@ export class RecordController {
     @CurrentUser() user: User,
     @Body() dto: CreateRecordDto,
   ) {
-    return this.recordService.create(moduleId, user.id, dto)
+    return this.recordService.create(moduleId, user.id, dto);
   }
 
   @Get('modules/:moduleId/records')
@@ -40,15 +38,12 @@ export class RecordController {
     @CurrentUser() user: User,
     @Query() query: Record<string, string>,
   ) {
-    return this.recordService.findAll(moduleId, user.id, query)
+    return this.recordService.findAll(moduleId, user.id, query);
   }
 
   @Get('records/:id')
-  findOne(
-    @Param('id') recordId: string,
-    @CurrentUser() user: User,
-  ) {
-    return this.recordService.findOne(recordId, user.id)
+  findOne(@Param('id') recordId: string, @CurrentUser() user: User) {
+    return this.recordService.findOne(recordId, user.id);
   }
 
   @Patch('records/:id')
@@ -57,14 +52,11 @@ export class RecordController {
     @CurrentUser() user: User,
     @Body() dto: UpdateRecordDto,
   ) {
-    return this.recordService.update(recordId, user.id, dto)
+    return this.recordService.update(recordId, user.id, dto);
   }
 
   @Delete('records/:id')
-  remove(
-    @Param('id') recordId: string,
-    @CurrentUser() user: User,
-  ) {
-    return this.recordService.remove(recordId, user.id)
+  remove(@Param('id') recordId: string, @CurrentUser() user: User) {
+    return this.recordService.remove(recordId, user.id);
   }
 }

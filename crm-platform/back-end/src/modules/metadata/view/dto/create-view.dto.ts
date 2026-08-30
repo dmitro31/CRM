@@ -1,4 +1,4 @@
-import { ViewType } from '@prisma/client'
+import { ViewType } from '@prisma/client';
 import {
   IsBoolean,
   IsEnum,
@@ -7,39 +7,39 @@ import {
   IsString,
   MaxLength,
   MinLength,
-} from 'class-validator'
+} from 'class-validator';
 
 export class CreateViewDto {
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  name!: string
+  name!: string;
 
   @IsOptional()
   @IsEnum(ViewType)
-  type?: ViewType
+  type?: ViewType;
 
   @IsOptional()
   @IsObject()
-  filters?: Record<string, unknown>
+  filters?: Record<string, unknown>;
 
   @IsOptional()
   @IsObject()
-  sorting?: Record<string, unknown>
+  sorting?: Record<string, unknown>;
 
   @IsOptional()
   @IsObject()
-  columns?: Record<string, unknown>
+  columns?: Record<string, unknown>;
 
   @IsOptional()
   @IsString()
-  icon?: string
+  icon?: string;
 
   @IsOptional()
   @IsString()
-  color?: string
+  color?: string;
 
   @IsOptional()
   @IsBoolean()
-  isDefault?: boolean
+  isDefault?: boolean;
 }

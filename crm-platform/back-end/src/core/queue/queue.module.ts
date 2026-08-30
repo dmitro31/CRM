@@ -1,8 +1,8 @@
-import { BullModule } from '@nestjs/bullmq'
-import { Module } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
+import { BullModule } from '@nestjs/bullmq';
+import { Module } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
-export const WORKFLOWS_QUEUE = 'workflows'
+export const WORKFLOWS_QUEUE = 'workflows';
 
 @Module({
   imports: [

@@ -1,14 +1,10 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
-import { PrismaService } from 'core/database/prisma.service'
-import { WorkspaceAccessService } from 'modules/workspace/workspace-access.service'
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'core/database/prisma.service';
+import { WorkspaceAccessService } from 'modules/workspace/workspace-access.service';
 
-import { CreateModuleDto } from './dto/create-module.dto'
-import { slugify } from 'common/utils/slugify.util'
-import { UpdateModuleDto } from './dto/update-module.dto'
+import { CreateModuleDto } from './dto/create-module.dto';
+import { slugify } from 'common/utils/slugify.util';
+import { UpdateModuleDto } from './dto/update-module.dto';
 
 @Injectable()
 export class ModuleService {
@@ -17,17 +13,10 @@ export class ModuleService {
     private readonly workspaceAccess: WorkspaceAccessService,
   ) {}
 
-  async create(
-    workspaceId: string,
-    userId: string,
-    dto: CreateModuleDto,
-  ) {
-      await this.workspaceAccess.ensureMembership(workspaceId, userId)
+  async create(workspaceId: string, userId: string, dto: CreateModuleDto) {
+    await this.workspaceAccess.ensureMembership(workspaceId, userId);
 
-    const key = await this.generateUniqueKey(
-      workspaceId,
-      dto.name,
-    )
+    const key = await this.generateUniqueKey(workspaceId, dto.name);
 
     return this.prisma.module.create({
       data: {
@@ -39,14 +28,11 @@ export class ModuleService {
         color: dto.color,
         order: dto.order ?? 0,
       },
-    })
+    });
   }
 
-  async findAll(
-    workspaceId: string,
-    userId: string,
-  ) {
-    await this.workspaceAccess.ensureMembership(workspaceId, userId)
+  async findAll(workspaceId: string, userId: string) {
+    await this.workspaceAccess.ensureMembership(workspaceId, userId);
 
     return this.prisma.module.findMany({
       where: {
@@ -56,13 +42,10 @@ export class ModuleService {
       orderBy: {
         order: 'asc',
       },
-    })
+    });
   }
 
-  async findOne(
-    moduleId: string,
-    userId: string,
-  ) {
+  async findOne(moduleId: string, userId: string) {
     const module = await this.prisma.module.findUnique({
       where: {
         id: moduleId,
@@ -75,25 +58,21 @@ export class ModuleService {
         },
         views: true,
       },
-    })
+    });
 
     if (!module) {
-      throw new NotFoundException('Module not found')
+      throw new NotFoundException('Module not found');
     }
 
-    await this.workspaceAccess.ensureMembership(module.workspaceId, userId)
+    await this.workspaceAccess.ensureMembership(module.workspaceId, userId);
 
-    return module
+    return module;
   }
 
-  async update(
-    moduleId: string,
-    userId: string,
-    dto: UpdateModuleDto,
-  ) {
-    const module = await this.findModuleOrThrow(moduleId)
+  async update(moduleId: string, userId: string, dto: UpdateModuleDto) {
+    const module = await this.findModuleOrThrow(moduleId);
 
-    await this.workspaceAccess.ensureMembership(module.workspaceId, userId)
+    await this.workspaceAccess.ensureMembership(module.workspaceId, userId);
 
     return this.prisma.module.update({
       where: {
@@ -107,26 +86,23 @@ export class ModuleService {
         order: dto.order,
         isActive: dto.isActive,
       },
-    })
+    });
   }
 
-  async remove(
-    moduleId: string,
-    userId: string,
-  ) {
-    const module = await this.findModuleOrThrow(moduleId)
+  async remove(moduleId: string, userId: string) {
+    const module = await this.findModuleOrThrow(moduleId);
 
-    await this.workspaceAccess.ensureMembership(module.workspaceId, userId)
+    await this.workspaceAccess.ensureMembership(module.workspaceId, userId);
 
     await this.prisma.module.delete({
       where: {
         id: moduleId,
       },
-    })
+    });
 
     return {
       message: 'Module deleted successfully',
-    }
+    };
   }
 
   private async findModuleOrThrow(moduleId: string) {
@@ -138,23 +114,23 @@ export class ModuleService {
         id: true,
         workspaceId: true,
       },
-    })
+    });
 
     if (!module) {
-      throw new NotFoundException('Module not found')
+      throw new NotFoundException('Module not found');
     }
 
-    return module
+    return module;
   }
-  
+
   private async generateUniqueKey(
     workspaceId: string,
     name: string,
   ): Promise<string> {
-    const baseKey = slugify(name, 'module')
+    const baseKey = slugify(name, 'module');
 
-    let key = baseKey
-    let counter = 1
+    let key = baseKey;
+    let counter = 1;
 
     while (true) {
       const existing = await this.prisma.module.findUnique({
@@ -167,14 +143,14 @@ export class ModuleService {
         select: {
           id: true,
         },
-      })
+      });
 
       if (!existing) {
-        return key
+        return key;
       }
 
-      counter += 1
-      key = `${baseKey}-${counter}`
+      counter += 1;
+      key = `${baseKey}-${counter}`;
     }
   }
 }

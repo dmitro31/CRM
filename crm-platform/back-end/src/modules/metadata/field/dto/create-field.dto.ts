@@ -8,48 +8,46 @@ import {
   MaxLength,
   MinLength,
   ValidateIf,
-} from 'class-validator'
-import { FieldType } from '@prisma/client'
+} from 'class-validator';
+import { FieldType } from '@prisma/client';
 
 export class CreateFieldDto {
   @IsString()
   @MinLength(1)
   @MaxLength(100)
-  name!: string
+  name!: string;
 
   @IsEnum(FieldType)
-  type!: FieldType
+  type!: FieldType;
 
   @IsOptional()
   @IsString()
   @MaxLength(500)
-  description?: string
+  description?: string;
 
   @IsOptional()
   @IsBoolean()
-  required?: boolean
+  required?: boolean;
 
   @IsOptional()
   @IsBoolean()
-  unique?: boolean
+  unique?: boolean;
 
   @IsOptional()
-  defaultValue?: unknown
-
+  defaultValue?: unknown;
   @ValidateIf(
-    dto =>
-      dto.type === FieldType.SELECT ||
-      dto.type === FieldType.MULTI_SELECT,
+    (dto: CreateFieldDto) =>
+      dto.type === FieldType.SELECT || dto.type === FieldType.MULTI_SELECT,
   )
   @IsArray()
-  options?: string[]
+  options?: string[];
 
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  placeholder?: string
+  placeholder?: string;
 
   @IsOptional()
   @IsInt()
-  order?: number
+  order?: number;
 }

@@ -5,33 +5,33 @@ import {
   IsString,
   MaxLength,
   MinLength,
-} from 'class-validator'
+} from 'class-validator';
 
 export class UpdateModuleDto {
   @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  name?: string
+  name?: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(500)
-  description?: string
+  description?: string;
 
   @IsOptional()
   @IsString()
-  icon?: string
+  icon?: string;
 
   @IsOptional()
   @IsString()
-  color?: string
+  color?: string;
 
   @IsOptional()
   @IsInt()
-  order?: number
+  order?: number;
 
   @IsOptional()
   @IsBoolean()
-  isActive?: boolean
+  isActive?: boolean;
 }

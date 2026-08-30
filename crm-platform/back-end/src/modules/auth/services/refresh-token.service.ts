@@ -1,12 +1,12 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
-import { randomUUID } from 'crypto'
-import * as bcrypt from 'bcrypt'
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'crypto';
+import * as bcrypt from 'bcrypt';
 
-import { PrismaService } from 'core/database/prisma.service'
-import { TokenPayload } from 'interfaces/token-payload.interface'
+import { PrismaService } from 'core/database/prisma.service';
+import { TokenPayload } from 'interfaces/token-payload.interface';
 
-import { TokenService } from './token.service'
+import { TokenService } from './token.service';
 
 @Injectable()
 export class RefreshTokenService {
@@ -17,33 +17,27 @@ export class RefreshTokenService {
   ) {}
 
   private getRefreshExpiresAt(): Date {
-    const expires = this.config.getOrThrow<string>(
-      'jwt.refreshExpiresIn',
-    )
+    const expires = this.config.getOrThrow<string>('jwt.refreshExpiresIn');
 
-    const match = expires.match(/^(\d+)([smhd])$/)
+    const match = expires.match(/^(\d+)([smhd])$/);
 
     if (!match) {
-      return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     }
 
-    const value = Number(match[1])
-    const unit = match[2]
+    const value = Number(match[1]);
+    const unit = match[2];
 
     const multipliers = {
       s: 1000,
       m: 60 * 1000,
       h: 60 * 60 * 1000,
       d: 24 * 60 * 60 * 1000,
-    }
+    };
 
     return new Date(
-      Date.now() +
-        value *
-          multipliers[
-            unit as keyof typeof multipliers
-          ],
-    )
+      Date.now() + value * multipliers[unit as keyof typeof multipliers],
+    );
   }
 
   async createSession(
@@ -52,23 +46,17 @@ export class RefreshTokenService {
     userAgent?: string,
     ipAddress?: string,
   ): Promise<string> {
-    const sessionId = randomUUID()
+    const sessionId = randomUUID();
 
     const payload: TokenPayload = {
       sub: userId,
       email,
       tid: sessionId,
-    }
+    };
 
-    const refreshToken =
-      await this.tokenService.generateRefreshToken(
-        payload,
-      )
+    const refreshToken = await this.tokenService.generateRefreshToken(payload);
 
-    const tokenHash = await bcrypt.hash(
-      refreshToken,
-      10,
-    )
+    const tokenHash = await bcrypt.hash(refreshToken, 10);
 
     await this.prisma.refreshToken.create({
       data: {
@@ -80,36 +68,26 @@ export class RefreshTokenService {
         userAgent,
         ipAddress,
       },
-    })
+    });
 
-    return refreshToken
+    return refreshToken;
   }
 
-  async validate(
-    refreshToken: string,
-  ): Promise<TokenPayload> {
-    const payload =
-      await this.tokenService.verifyRefreshToken(
-        refreshToken,
-      )
+  async validate(refreshToken: string): Promise<TokenPayload> {
+    const payload = await this.tokenService.verifyRefreshToken(refreshToken);
 
     if (!payload.tid) {
-      throw new UnauthorizedException(
-        'Invalid refresh token',
-      )
+      throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const session =
-      await this.prisma.refreshToken.findUnique({
-        where: {
-          id: payload.tid,
-        },
-      })
+    const session = await this.prisma.refreshToken.findUnique({
+      where: {
+        id: payload.tid,
+      },
+    });
 
     if (!session) {
-      throw new UnauthorizedException(
-        'Session not found',
-      )
+      throw new UnauthorizedException('Session not found');
     }
 
     if (session.expiresAt < new Date()) {
@@ -117,28 +95,21 @@ export class RefreshTokenService {
         where: {
           id: session.id,
         },
-      })
+      });
 
-      throw new UnauthorizedException(
-        'Refresh token expired',
-      )
+      throw new UnauthorizedException('Refresh token expired');
     }
 
-    const matches = await bcrypt.compare(
-      refreshToken,
-      session.tokenHash,
-    )
+    const matches = await bcrypt.compare(refreshToken, session.tokenHash);
 
     if (!matches) {
       await this.prisma.refreshToken.deleteMany({
         where: {
           userId: session.userId,
         },
-      })
+      });
 
-      throw new UnauthorizedException(
-        'Refresh token reuse detected'
-      )
+      throw new UnauthorizedException('Refresh token reuse detected');
     }
 
     await this.prisma.refreshToken.update({
@@ -148,9 +119,9 @@ export class RefreshTokenService {
       data: {
         lastUsedAt: new Date(),
       },
-    })
+    });
 
-    return payload
+    return payload;
   }
 
   async rotate(
@@ -158,46 +129,34 @@ export class RefreshTokenService {
     userAgent?: string,
     ipAddress?: string,
   ): Promise<string> {
-    const payload =
-      await this.validate(refreshToken)
+    const payload = await this.validate(refreshToken);
 
     await this.prisma.refreshToken.delete({
       where: {
         id: payload.tid,
       },
-    })
+    });
 
-    return this.createSession(
-      payload.sub,
-      payload.email,
-      userAgent,
-      ipAddress,
-    )
+    return this.createSession(payload.sub, payload.email, userAgent, ipAddress);
   }
 
-  async revokeSession(
-    sessionId: string,
-  ) {
+  async revokeSession(sessionId: string) {
     return this.prisma.refreshToken.delete({
       where: {
         id: sessionId,
       },
-    })
+    });
   }
 
-  async revokeAllSessions(
-    userId: string,
-  ) {
+  async revokeAllSessions(userId: string) {
     return this.prisma.refreshToken.deleteMany({
       where: {
         userId,
       },
-    })
+    });
   }
 
-  async getSessions(
-    userId: string,
-  ) {
+  async getSessions(userId: string) {
     return this.prisma.refreshToken.findMany({
       where: {
         userId,
@@ -213,7 +172,7 @@ export class RefreshTokenService {
         userAgent: true,
         ipAddress: true,
       },
-    })
+    });
   }
 
   async cleanupExpired() {
@@ -223,6 +182,6 @@ export class RefreshTokenService {
           lt: new Date(),
         },
       },
-    })
+    });
   }
 }

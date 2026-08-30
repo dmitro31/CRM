@@ -1,9 +1,4 @@
-import {
-  IsEnum,
-  IsObject,
-  IsOptional,
-  IsString,
-} from 'class-validator'
+import { IsEnum, IsObject, IsOptional, IsString } from 'class-validator';
 
 export enum ActionType {
   SEND_NOTIFICATION = 'SEND_NOTIFICATION',
@@ -13,25 +8,25 @@ export enum ActionType {
 
 export class ActionDto {
   @IsEnum(ActionType)
-  type!: ActionType
+  type!: ActionType;
 
   @IsOptional()
   @IsString()
-  title?: string
+  title?: string;
 
   @IsOptional()
   @IsString()
-  message?: string
+  message?: string;
 
   @IsOptional()
   @IsString()
-  subject?: string
+  subject?: string;
 
   @IsOptional()
   @IsString()
-  body?: string
+  body?: string;
 
   @IsOptional()
   @IsObject()
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>;
 }

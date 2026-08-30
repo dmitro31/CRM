@@ -1,10 +1,10 @@
-import { Module } from '@nestjs/common'
+import { Module } from '@nestjs/common';
 
-import { StorageModule } from 'core/storage/storage.module'
-import { WorkspaceModule } from 'modules/workspace/workspace.module'
+import { StorageModule } from 'core/storage/storage.module';
+import { WorkspaceModule } from 'modules/workspace/workspace.module';
 
-import { FilesController } from './files.controller'
-import { FilesService } from './files.service'
+import { FilesController } from './files.controller';
+import { FilesService } from './files.service';
 
 @Module({
   imports: [StorageModule, WorkspaceModule],

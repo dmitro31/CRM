@@ -1,7 +1,7 @@
-import { IsOptional, IsUUID } from 'class-validator'
+import { IsOptional, IsUUID } from 'class-validator';
 
 export class ListFilesDto {
   @IsOptional()
   @IsUUID()
-  moduleId?: string
+  moduleId?: string;
 }

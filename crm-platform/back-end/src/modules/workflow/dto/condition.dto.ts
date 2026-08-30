@@ -1,4 +1,4 @@
-import { IsDefined, IsEnum, IsString } from 'class-validator'
+import { IsDefined, IsEnum, IsString } from 'class-validator';
 
 export enum ConditionOperator {
   EQUALS = 'equals',
@@ -9,11 +9,11 @@ export enum ConditionOperator {
 
 export class ConditionDto {
   @IsString()
-  fieldKey!: string
+  fieldKey!: string;
 
   @IsEnum(ConditionOperator)
-  operator!: ConditionOperator
+  operator!: ConditionOperator;
 
   @IsDefined()
-  value: unknown
+  value: unknown;
 }

@@ -7,22 +7,20 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
-} from '@nestjs/common'
-import { FileInterceptor } from '@nestjs/platform-express'
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 
-import type { User } from '@prisma/client'
+import type { User } from '@prisma/client';
 
-import { CurrentUser } from 'common/decorators/current-user.decorator'
-import { JwtAuthGuard } from 'modules/auth/guards/jwt-auth.guard'
+import { CurrentUser } from 'common/decorators/current-user.decorator';
+import { JwtAuthGuard } from 'modules/auth/guards/jwt-auth.guard';
 
-import { FilesService } from './files.service'
+import { FilesService } from './files.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class FilesController {
-  constructor(
-    private readonly filesService: FilesService,
-  ) {}
+  constructor(private readonly filesService: FilesService) {}
 
   @Post('workspaces/:workspaceId/files')
   @UseInterceptors(FileInterceptor('file'))
@@ -31,7 +29,7 @@ export class FilesController {
     @CurrentUser() user: User,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.filesService.upload(workspaceId, user.id, file)
+    return this.filesService.upload(workspaceId, user.id, file);
   }
 
   @Get('workspaces/:workspaceId/files')
@@ -39,22 +37,16 @@ export class FilesController {
     @Param('workspaceId') workspaceId: string,
     @CurrentUser() user: User,
   ) {
-    return this.filesService.findAll(workspaceId, user.id)
+    return this.filesService.findAll(workspaceId, user.id);
   }
 
   @Get('files/:id/download')
-  getDownloadUrl(
-    @Param('id') fileId: string,
-    @CurrentUser() user: User,
-  ) {
-    return this.filesService.getDownloadUrl(fileId, user.id)
+  getDownloadUrl(@Param('id') fileId: string, @CurrentUser() user: User) {
+    return this.filesService.getDownloadUrl(fileId, user.id);
   }
 
   @Delete('files/:id')
-  remove(
-    @Param('id') fileId: string,
-    @CurrentUser() user: User,
-  ) {
-    return this.filesService.remove(fileId, user.id)
+  remove(@Param('id') fileId: string, @CurrentUser() user: User) {
+    return this.filesService.remove(fileId, user.id);
   }
 }

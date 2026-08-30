@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common'
-import { TerminusModule } from '@nestjs/terminus'
+import { Module } from '@nestjs/common';
+import { TerminusModule } from '@nestjs/terminus';
 
-import { PrismaModule } from 'core/database/prisma.module'
+import { PrismaModule } from 'core/database/prisma.module';
 
-import { HealthController } from './health.controller'
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [TerminusModule, PrismaModule],

@@ -1,7 +1,7 @@
-import { IsObject, IsOptional } from 'class-validator'
+import { IsObject, IsOptional } from 'class-validator';
 
 export class UpdateRecordDto {
   @IsOptional()
   @IsObject()
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>;
 }

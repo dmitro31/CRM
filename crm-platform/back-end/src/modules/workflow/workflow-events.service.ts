@@ -1,16 +1,16 @@
-import { InjectQueue } from '@nestjs/bullmq'
-import { Injectable } from '@nestjs/common'
-import { Queue } from 'bullmq'
-import { WORKFLOWS_QUEUE } from 'core/queue/queue.module'
+import { InjectQueue } from '@nestjs/bullmq';
+import { Injectable } from '@nestjs/common';
+import { Queue } from 'bullmq';
+import { WORKFLOWS_QUEUE } from 'core/queue/queue.module';
 
 export interface WorkflowEventPayload {
-  workspaceId: string
-  moduleId: string
-  recordId: string
-  event: 'RECORD_CREATED' | 'RECORD_UPDATED'
-  previousData: Record<string, unknown> | null
-  currentData: Record<string, unknown>
-  triggeredByWorkflow?: boolean
+  workspaceId: string;
+  moduleId: string;
+  recordId: string;
+  event: 'RECORD_CREATED' | 'RECORD_UPDATED';
+  previousData: Record<string, unknown> | null;
+  currentData: Record<string, unknown>;
+  triggeredByWorkflow?: boolean;
 }
 
 @Injectable()
@@ -22,9 +22,9 @@ export class WorkflowEventsService {
 
   async emit(payload: WorkflowEventPayload) {
     if (payload.triggeredByWorkflow) {
-      return
+      return;
     }
 
-    await this.queue.add('record-event', payload)
+    await this.queue.add('record-event', payload);
   }
 }

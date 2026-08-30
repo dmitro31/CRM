@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer'
+import { Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
@@ -9,37 +9,37 @@ import {
   MaxLength,
   MinLength,
   ValidateNested,
-} from 'class-validator'
-import { FieldType } from '@prisma/client'
+} from 'class-validator';
+import { FieldType } from '@prisma/client';
 
 class DraftFieldDto {
   @IsString()
   @MinLength(1)
   @MaxLength(100)
-  name!: string
+  name!: string;
 
   @IsEnum(FieldType)
-  type!: FieldType
+  type!: FieldType;
 
   @IsOptional()
   @IsBoolean()
-  required?: boolean
+  required?: boolean;
 
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
-  options?: string[]
+  options?: string[];
 }
 
 export class CreateFormFromDraftDto {
   @IsString()
   @MinLength(2)
   @MaxLength(100)
-  name!: string
+  name!: string;
 
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => DraftFieldDto)
-  fields!: DraftFieldDto[]
+  fields!: DraftFieldDto[];
 }

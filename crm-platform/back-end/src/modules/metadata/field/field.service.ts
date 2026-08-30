@@ -1,42 +1,32 @@
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common'
-import { PrismaService } from 'core/database/prisma.service'
-import { WorkspaceAccessService } from 'modules/workspace/workspace-access.service'
-import { slugify } from 'common/utils/slugify.util'
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from 'core/database/prisma.service';
+import { WorkspaceAccessService } from 'modules/workspace/workspace-access.service';
+import { slugify } from 'common/utils/slugify.util';
+import { Prisma } from '@prisma/client';
 
-import { CreateFieldDto } from './dto/create-field.dto'
-import { UpdateFieldDto } from './dto/update-field.dto'
+import { CreateFieldDto } from './dto/create-field.dto';
+import { UpdateFieldDto } from './dto/update-field.dto';
 
 @Injectable()
 export class FieldService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly workspaceAccess: WorkspaceAccessService
+    private readonly workspaceAccess: WorkspaceAccessService,
   ) {}
 
-  async create(
-    moduleId: string,
-    userId: string,
-    dto: CreateFieldDto,
-  ) {
+  async create(moduleId: string, userId: string, dto: CreateFieldDto) {
     const module = await this.workspaceAccess.ensureModuleAccess(
       moduleId,
       userId,
-    )
+    );
 
-    const key = await this.generateUniqueKey(
-      moduleId,
-      dto.name,
-    )
+    const key = await this.generateUniqueKey(moduleId, dto.name);
 
     const order =
       dto.order ??
       (await this.prisma.field.count({
         where: { moduleId },
-      }))
+      }));
 
     return this.prisma.field.create({
       data: {
@@ -47,19 +37,16 @@ export class FieldService {
         description: dto.description,
         required: dto.required ?? false,
         unique: dto.unique ?? false,
-        defaultValue: dto.defaultValue as any,
-        options: dto.options as any,
+        defaultValue: dto.defaultValue as Prisma.InputJsonValue,
+        options: dto.options as Prisma.InputJsonValue,
         placeholder: dto.placeholder,
         order,
       },
-    })
+    });
   }
 
-  async findAll(
-    moduleId: string,
-    userId: string,
-  ) {
-    await this.workspaceAccess.ensureModuleAccess(moduleId, userId)
+  async findAll(moduleId: string, userId: string) {
+    await this.workspaceAccess.ensureModuleAccess(moduleId, userId);
 
     return this.prisma.field.findMany({
       where: {
@@ -69,17 +56,13 @@ export class FieldService {
       orderBy: {
         order: 'asc',
       },
-    })
+    });
   }
 
-  async update(
-    fieldId: string,
-    userId: string,
-    dto: UpdateFieldDto,
-  ) {
-    const field = await this.findFieldOrThrow(fieldId)
+  async update(fieldId: string, userId: string, dto: UpdateFieldDto) {
+    const field = await this.findFieldOrThrow(fieldId);
 
-    await this.workspaceAccess.ensureModuleAccess(field.moduleId, userId)
+    await this.workspaceAccess.ensureModuleAccess(field.moduleId, userId);
 
     return this.prisma.field.update({
       where: {
@@ -90,32 +73,29 @@ export class FieldService {
         description: dto.description,
         required: dto.required,
         unique: dto.unique,
-        defaultValue: dto.defaultValue as any,
-        options: dto.options as any,
+        defaultValue: dto.defaultValue as Prisma.InputJsonValue,
+        options: dto.options as Prisma.InputJsonValue,
         placeholder: dto.placeholder,
         order: dto.order,
         isActive: dto.isActive,
-      },  
-    })
+      },
+    });
   }
 
-  async remove(
-    fieldId: string,
-    userId: string,
-  ) {
-    const field = await this.findFieldOrThrow(fieldId)
+  async remove(fieldId: string, userId: string) {
+    const field = await this.findFieldOrThrow(fieldId);
 
-    await this.workspaceAccess.ensureModuleAccess(field.moduleId, userId)
+    await this.workspaceAccess.ensureModuleAccess(field.moduleId, userId);
 
     await this.prisma.field.delete({
       where: {
         id: fieldId,
       },
-    })
+    });
 
     return {
       message: 'Field deleted successfully',
-    }
+    };
   }
 
   private async findFieldOrThrow(fieldId: string) {
@@ -127,23 +107,23 @@ export class FieldService {
         id: true,
         moduleId: true,
       },
-    })
+    });
 
     if (!field) {
-      throw new NotFoundException('Field not found')
+      throw new NotFoundException('Field not found');
     }
 
-    return field
+    return field;
   }
 
   private async generateUniqueKey(
     moduleId: string,
     name: string,
   ): Promise<string> {
-    const baseKey = slugify(name, 'field')
+    const baseKey = slugify(name, 'field');
 
-    let key = baseKey
-    let counter = 1
+    let key = baseKey;
+    let counter = 1;
 
     while (true) {
       const existing = await this.prisma.field.findUnique({
@@ -156,14 +136,14 @@ export class FieldService {
         select: {
           id: true,
         },
-      })
+      });
 
       if (!existing) {
-        return key
+        return key;
       }
 
-      counter += 1
-      key = `${baseKey}-${counter}`
+      counter += 1;
+      key = `${baseKey}-${counter}`;
     }
   }
 }

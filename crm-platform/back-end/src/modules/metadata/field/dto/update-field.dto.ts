@@ -6,45 +6,45 @@ import {
   IsString,
   MaxLength,
   MinLength,
-} from 'class-validator'
+} from 'class-validator';
 
 export class UpdateFieldDto {
   @IsOptional()
   @IsString()
   @MinLength(1)
   @MaxLength(100)
-  name?: string
+  name?: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(500)
-  description?: string
+  description?: string;
 
   @IsOptional()
   @IsBoolean()
-  required?: boolean
+  required?: boolean;
 
   @IsOptional()
   @IsBoolean()
-  unique?: boolean
+  unique?: boolean;
 
   @IsOptional()
-  defaultValue?: unknown
+  defaultValue?: unknown;
 
   @IsOptional()
   @IsArray()
-  options?: string[]
+  options?: string[];
 
   @IsOptional()
   @IsString()
   @MaxLength(200)
-  placeholder?: string
+  placeholder?: string;
 
   @IsOptional()
   @IsInt()
-  order?: number
+  order?: number;
 
   @IsOptional()
   @IsBoolean()
-  isActive?: boolean
+  isActive?: boolean;
 }
