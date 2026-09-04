@@ -12,6 +12,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   refetchUser: () => Promise<void>
+  isAuth: boolean
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -63,8 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login')
   }
 
+  const isAuth = user  !== null
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, refetchUser }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, refetchUser , isAuth }}>
       {children}
     </AuthContext.Provider>
   )

@@ -65,11 +65,23 @@ apiClient.interceptors.response.use(
       _retry?: boolean
     }
 
-    if (
-      error.response?.status === 401 &&
-      originalRequest &&
-      !originalRequest._retry
-    ) {
+    if (!originalRequest) {
+      return Promise.reject(error)
+    }
+
+    const isRefreshUrl = originalRequest.url?.includes('/auth/refresh')
+    const status = error.response?.status
+
+    if (isRefreshUrl && (status === 401 || status === 403)) {
+      setAccessToken(null)
+      refreshPromise = null
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
+      return Promise.reject(error)
+    }
+
+    if (status === 401 && !originalRequest._retry && !isRefreshUrl) {
       originalRequest._retry = true
 
       try {
@@ -82,12 +94,12 @@ apiClient.interceptors.response.use(
         const newToken = await refreshPromise
         originalRequest.headers.Authorization = `Bearer ${newToken}`
         return apiClient(originalRequest)
-      } catch {
+      } catch (refreshError) {
         setAccessToken(null)
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
           window.location.href = '/login'
         }
-        return Promise.reject(error)
+        return Promise.reject(refreshError)
       }
     }
 

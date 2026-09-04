@@ -29,6 +29,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { RequestIdMiddleware } from 'common/middleware/request-id.middleware';
 import { AppThrottlerGuard } from 'common/guards/app-throttler.guard';
 import type { IncomingMessage } from 'http';
+import { NotificationModule } from 'modules/notifications/notification.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import type { IncomingMessage } from 'http';
     PrismaModule,
     AuthModule,
     WorkspaceModule,
+    NotificationModule,
     MetadataModule,
     RecordModule,
     FilesModule,
