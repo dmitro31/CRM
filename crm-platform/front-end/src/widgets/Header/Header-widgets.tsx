@@ -19,7 +19,7 @@ export default function HeaderWidgets() {
           <Logo />
         </div>
         <WorkspaceDropMenu />
-        <HeaderInput />
+        <div className='ml-5'><HeaderInput /></div>
       </div>
 
       <div className="flex items-center gap-2 pr-8">

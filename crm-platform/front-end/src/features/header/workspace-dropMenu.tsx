@@ -3,12 +3,15 @@
 import { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Plus } from 'lucide-react'
 import { useWorkspace } from '@/providers/workspace-provider'
+import Link from 'next/link'
+import { useAuth } from '@/providers/auth-provider'
 
 export default function WorkspaceDropMenu() {
   const [isActive, setIsActive] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
   const { workspaces, setCurrentWorkspaceId, currentWorkspace } = useWorkspace()
+  const { isAuth } = useAuth()
 
   const toggleMenu = () => setIsActive(prev => !prev)
 
@@ -59,9 +62,8 @@ export default function WorkspaceDropMenu() {
 
         <ChevronDown
           size={14}
-          className={`shrink-0 text-[#6C716A] transition-transform duration-150 ${
-            isActive ? 'rotate-180' : ''
-          }`}
+          className={`shrink-0 text-[#6C716A] transition-transform duration-150 ${isActive ? 'rotate-180' : ''
+            }`}
         />
       </button>
 
@@ -83,22 +85,19 @@ export default function WorkspaceDropMenu() {
                     key={workspace.id}
                     type="button"
                     onClick={() => handleSelectWorkspace(workspace.id)}
-                    className={`flex w-full items-center gap-2.5 rounded-[6px] px-2.5 py-2 text-left transition-colors ${
-                      isSelected ? 'bg-[#E7EEE9]' : 'hover:bg-[#F6F7F4]'
-                    }`}
+                    className={`flex w-full items-center gap-2.5 rounded-[6px] px-2.5 py-2 text-left transition-colors ${isSelected ? 'bg-[#E7EEE9]' : 'hover:bg-[#F6F7F4]'
+                      }`}
                   >
                     <span
-                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                        isSelected ? 'bg-[#24493B]' : 'bg-[#DFE3DC]'
-                      }`}
+                      className={`h-1.5 w-1.5 shrink-0 rounded-full ${isSelected ? 'bg-[#24493B]' : 'bg-[#DFE3DC]'
+                        }`}
                     />
                     <div className="min-w-0 flex-1">
                       <p
-                        className={`truncate text-[13px] leading-none ${
-                          isSelected
-                            ? 'font-medium text-[#171A18]'
-                            : 'text-[#3D423B]'
-                        }`}
+                        className={`truncate text-[13px] leading-none ${isSelected
+                          ? 'font-medium text-[#171A18]'
+                          : 'text-[#3D423B]'
+                          }`}
                       >
                         {workspace.name}
                       </p>
@@ -116,15 +115,30 @@ export default function WorkspaceDropMenu() {
             )}
           </div>
 
-          <div className="mt-1 border-t border-[#EEF0EB] pt-1">
+          {isAuth ? (<Link href={'/dashboard'}><div className="mt-1 border-t border-[#EEF0EB] pt-1">
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-2 text-[12px] font-medium text-[#3D423B] transition-colors hover:bg-[#F6F7F4]"
+            >
+
+              <span>Перейти в workspace</span>
+            </button>
+          </div></Link>) : (<Link href={"/login"} ><div className="mt-1 border-t border-[#EEF0EB] pt-1">
             <button
               type="button"
               className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-2 text-[12px] font-medium text-[#3D423B] transition-colors hover:bg-[#F6F7F4]"
             >
               <Plus size={14} className="text-[#6C716A]" />
-              <span>Створити workspace</span>
+              <span>Створити workspace →</span>
             </button>
+          </div></Link>)}
+
+          <div className="mt-1 border-t border-[#EEF0EB] pt-1 ml-2" >
+            <Link href={`/workspace/${currentWorkspace?.id ?? ''}/settings`} className="text-[13px] text-[#24493B] hover:underline">
+              Налаштування →
+            </Link>
           </div>
+
         </div>
       )}
     </div>

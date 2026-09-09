@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException , BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'core/database/prisma.service';
 import { WorkspaceAccessService } from 'modules/workspace/workspace-access.service';
 import { slugify } from 'common/utils/slugify.util';
@@ -12,7 +12,7 @@ export class FieldService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly workspaceAccess: WorkspaceAccessService,
-  ) {}
+  ) { }
 
   async create(moduleId: string, userId: string, dto: CreateFieldDto) {
     const module = await this.workspaceAccess.ensureModuleAccess(
@@ -83,19 +83,36 @@ export class FieldService {
   }
 
   async remove(fieldId: string, userId: string) {
-    const field = await this.findFieldOrThrow(fieldId);
-
-    await this.workspaceAccess.ensureModuleAccess(field.moduleId, userId);
-
-    await this.prisma.field.delete({
-      where: {
-        id: fieldId,
+    const field = await this.prisma.field.findUnique({
+      where: { id: fieldId },
+      include: {
+        module: true,
       },
-    });
+    })
+
+    if (!field) {
+      throw new NotFoundException('Field not found')
+    }
+
+    await this.workspaceAccess.ensureModuleAccess(
+      field.moduleId,
+      userId,
+    )
+
+    if (!field.isActive) {
+      throw new BadRequestException('Field is already deleted')
+    }
+
+    await this.prisma.field.update({
+      where: { id: fieldId },
+      data: {
+        isActive: false,
+      },
+    })
 
     return {
       message: 'Field deleted successfully',
-    };
+    }
   }
 
   private async findFieldOrThrow(fieldId: string) {

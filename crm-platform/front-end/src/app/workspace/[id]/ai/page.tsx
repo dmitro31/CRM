@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { AxiosError } from 'axios'
+import { Sparkles, Send } from 'lucide-react'
 
 import { ProtectedRoute } from '@/components/protected-route'
+import { Card } from '@/shared/UI/Card'
 import * as aiApi from '@/lib/ai-api'
 
 interface ChatMessage {
@@ -43,38 +45,40 @@ function AiAssistantContent() {
       const { answer } = await aiApi.askAssistant(workspaceId, trimmed)
       setMessages(prev => [...prev, { role: 'assistant', text: answer }])
     } catch (err) {
-      const message =
-        err instanceof AxiosError
-          ? (err.response?.data as { message?: string })?.message
-          : undefined
-      setMessages(prev => [
-        ...prev,
-        { role: 'assistant', text: message ?? 'Не вдалося отримати відповідь.' },
-      ])
+      let message = 'Не вдалося отримати відповідь.'
+      if (err instanceof AxiosError) {
+        message =
+          err.response?.status === 503
+            ? 'AI зараз перевантажений, спробуй ще раз за хвилину.'
+            : ((err.response?.data as { message?: string })?.message ?? message)
+      }
+      setMessages(prev => [...prev, { role: 'assistant', text: message }])
     } finally {
       setIsAsking(false)
     }
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-2xl flex-col p-8">
-      <h1 className="mb-4 text-2xl font-semibold">AI Асистент</h1>
+    <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-2xl flex-col px-8 py-10">
+      <div className="mb-4 flex items-center gap-2">
+        <Sparkles size={18} className="text-[#24493B]" />
+        <h1 className="text-[20px] font-medium text-[#171A18]">AI Асистент</h1>
+      </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto rounded-lg border bg-white p-4">
+      <Card padded={false} className="flex-1 space-y-3 overflow-y-auto p-4">
         {messages.length === 0 && (
-          <p className="text-gray-400">
-            Запитай про дані свого workspace, наприклад: &quot;скільки записів у
-            статусі Новий?&quot;
+          <p className="text-[13px] text-[#8B9088]">
+            Запитай про дані свого workspace, наприклад: &quot;скільки записів у статусі Новий?&quot;
           </p>
         )}
 
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
+            className={`max-w-[80%] rounded-lg px-3 py-2 text-[13px] ${
               message.role === 'user'
-                ? 'ml-auto bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-900'
+                ? 'ml-auto bg-[#24493B] text-white'
+                : 'bg-[#F6F7F4] text-[#171A18]'
             }`}
           >
             {message.text}
@@ -82,30 +86,28 @@ function AiAssistantContent() {
         ))}
 
         {isAsking && (
-          <div className="max-w-[80%] rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-500">
+          <div className="max-w-[80%] rounded-lg bg-[#F6F7F4] px-3 py-2 text-[13px] text-[#8B9088]">
             Думаю...
           </div>
         )}
 
         <div ref={bottomRef} />
-      </div>
+      </Card>
 
       <div className="mt-4 flex gap-2">
         <input
           value={question}
           onChange={e => setQuestion(e.target.value)}
-          onKeyDown={e => {
-            if (e.key === 'Enter') void handleAsk()
-          }}
+          onKeyDown={e => { if (e.key === 'Enter') void handleAsk() }}
           placeholder="Напиши питання..."
-          className="flex-1 rounded border px-3 py-2"
+          className="flex-1 rounded-md border border-[#DFE3DC] px-3 py-2 text-[13px] focus:border-[#24493B]/40 focus:outline-none"
         />
         <button
           onClick={() => void handleAsk()}
           disabled={isAsking}
-          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+          className="flex items-center justify-center rounded-md bg-[#24493B] px-4 py-2 text-white transition-colors hover:bg-[#1B392E] disabled:opacity-50"
         >
-          Надіслати
+          <Send size={15} />
         </button>
       </div>
     </div>

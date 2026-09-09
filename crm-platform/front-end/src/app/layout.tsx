@@ -9,7 +9,7 @@ import HeaderWidgets from '@/widgets/Header/Header-widgets'
 // [2] Налаштовуємо шрифт
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
-  variable: '--font-inter', 
+  variable: '--font-inter',
   display: 'swap',
 })
 
@@ -20,7 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <QueryProvider>
           <AuthProvider>
             <WorkspaceProvider>
-              <HeaderWidgets />
+              <div className="sticky top-0 z-40">
+                <HeaderWidgets />
+              </div>
               {children}
             </WorkspaceProvider>
           </AuthProvider>

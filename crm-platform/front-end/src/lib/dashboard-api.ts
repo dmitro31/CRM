@@ -67,3 +67,68 @@ function firstDisplayValue(record: CrmRecord, module_: CrmModule): string {
 }
 
 export { firstDisplayValue }
+
+export interface TimelinePoint {
+  date: string
+  count: number
+}
+
+export async function getRecordsTimeline(
+  workspaceId: string,
+  modules: CrmModule[],
+  days = 14,
+): Promise<TimelinePoint[]> {
+  const since = new Date()
+  since.setDate(since.getDate() - days)
+
+  const allTimestamps = (
+    await Promise.all(
+      modules.map(async module_ => {
+        const result = await recordApi.getRecords(module_.id, {
+          limit: '100',
+          sortBy: 'createdAt',
+          sortOrder: 'desc',
+        })
+        return result.items.map(r => r.createdAt)
+      }),
+    )
+  ).flat()
+
+  const buckets = new Map<string, number>()
+  for (let i = 0; i < days; i++) {
+    const d = new Date()
+    d.setDate(d.getDate() - (days - 1 - i))
+    buckets.set(d.toISOString().slice(0, 10), 0)
+  }
+
+  for (const ts of allTimestamps) {
+    const day = ts.slice(0, 10)
+    if (buckets.has(day)) {
+      buckets.set(day, (buckets.get(day) ?? 0) + 1)
+    }
+  }
+
+  return Array.from(buckets.entries()).map(([date, count]) => ({ date, count }))
+}
+
+export interface PipelineStage {
+  label: string
+  count: number
+}
+
+export async function getPipelineBreakdown(
+  moduleId: string,
+  fieldKey: string,
+  options: string[],
+): Promise<PipelineStage[]> {
+  const results = await Promise.all(
+    options.map(async option => {
+      const result = await recordApi.getRecords(moduleId, {
+        [fieldKey]: option,
+        limit: '1',
+      })
+      return { label: option, count: result.total }
+    }),
+  )
+  return results
+}

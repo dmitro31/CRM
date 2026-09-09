@@ -47,4 +47,30 @@ export async function getInvitations(workspaceId: string) {
 
 export async function revokeInvitation(invitationId: string) {
   await apiClient.delete(`/invitations/${invitationId}`)
+
+  
+}
+
+export async function updateMemberRole(
+  workspaceId: string,
+  memberId: string,
+  roleId: string,
+) {
+  const { data } = await apiClient.patch<WorkspaceMember>(
+    `/workspaces/${workspaceId}/members/${memberId}`,
+    { roleId },
+  )
+  return data
+}
+
+export async function removeMember(workspaceId: string, memberId: string) {
+  await apiClient.delete(`/workspaces/${workspaceId}/members/${memberId}`)
+}
+
+export async function transferOwnership(workspaceId: string, newOwnerUserId: string) {
+  const { data } = await apiClient.post<Workspace>(
+    `/workspaces/${workspaceId}/transfer-ownership`,
+    { newOwnerUserId },
+  )
+  return data
 }

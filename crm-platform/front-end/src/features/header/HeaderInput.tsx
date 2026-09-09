@@ -26,7 +26,7 @@ export default function HeaderInput() {
   }
 
   return (
-    <div className="w-full max-w-md pl-10">
+    <div className="w-full max-w-max pl-10">
       <div
         className={`flex items-center gap-2.5 rounded-full border bg-white px-3.5 py-1.5 transition-colors ${
           isFocused ? 'border-[#24493B]/40' : 'border-[#DFE3DC] hover:border-[#C7CDC2]'
@@ -45,7 +45,7 @@ export default function HeaderInput() {
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder="Пошук угод, контактів або завдань"
-          className="h-5 w-full bg-transparent text-[13px] text-[#171A18] placeholder:text-[#8B9088] focus:outline-none"
+          className="h-5 w-60 bg-transparent text-[13px] text-[#171A18] placeholder:text-[#8B9088] focus:outline-none"
         />
 
         {query ? (

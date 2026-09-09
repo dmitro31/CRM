@@ -8,6 +8,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { AxiosError } from 'axios'
 
 import { ProtectedRoute } from '@/components/protected-route'
+import { Button } from '@/shared/UI/button/button'
+import { Input } from '@/shared/UI/Input'
+import { Select } from '@/shared/UI/Select'
+import { Card } from '@/shared/UI/Card'
+import { PageHeader } from '@/shared/UI/PageHeader'
 import * as workspaceApi from '@/lib/workspace-api'
 import {
   inviteMemberSchema,
@@ -83,47 +88,77 @@ function MembersContent() {
     }
   }
 
+  const handleRoleChange = async (memberId: string, roleId: string) => {
+    await workspaceApi.updateMemberRole(workspaceId, memberId, roleId)
+    void queryClient.invalidateQueries({ queryKey: ['workspace', workspaceId] })
+  }
+
+  const handleRemoveMember = async (memberId: string) => {
+    if (!confirm('Видалити цього учасника з workspace?')) return
+    await workspaceApi.removeMember(workspaceId, memberId)
+    void queryClient.invalidateQueries({ queryKey: ['workspace', workspaceId] })
+  }
+
   return (
-    <div className="mx-auto max-w-2xl p-8">
-      <h1 className="mb-6 text-2xl font-semibold">
-        Учасники — {workspace?.name}
-      </h1>
+    <div className="mx-auto max-w-2xl px-8 py-10">
+      <PageHeader title="Учасники" subtitle={workspace?.name} />
 
       <div className="mb-8 space-y-2">
-        {workspace?.members?.map(member => (
-          <div
-            key={member.id}
-            className="flex items-center justify-between rounded border bg-white p-3"
-          >
-            <div>
-              <div className="font-medium">
-                {member.user.firstName} {member.user.lastName}
+        {workspace?.members?.map(member => {
+          const isOwnerRow = member.userId === workspace.ownerId
+          return (
+            <Card key={member.id} className="flex items-center justify-between">
+              <div>
+                <div className="text-[13.5px] font-medium text-[#171A18]">
+                  {member.user.firstName} {member.user.lastName}
+                </div>
+                <div className="text-[12px] text-[#6C716A]">{member.user.email}</div>
               </div>
-              <div className="text-sm text-gray-500">{member.user.email}</div>
-            </div>
-            <span className="rounded bg-gray-100 px-2 py-1 text-xs">
-              {member.role.name}
-            </span>
-          </div>
-        ))}
+
+              <div className="flex items-center gap-2">
+                {isOwnerRow ? (
+                  <span className="rounded-full bg-[#E7EEE9] px-2.5 py-1 font-mono text-[11px] text-[#24493B]">
+                    {member.role.name}
+                  </span>
+                ) : (
+                  <select
+                    value={member.roleId}
+                    onChange={e => void handleRoleChange(member.id, e.target.value)}
+                    className="rounded-md border border-[#DFE3DC] px-2 py-1 text-[11.5px]"
+                  >
+                    {roles.map(role => (
+                      <option key={role.id} value={role.id}>{role.name}</option>
+                    ))}
+                  </select>
+                )}
+
+                {!isOwnerRow && (
+                  <button
+                    onClick={() => void handleRemoveMember(member.id)}
+                    className="text-[11.5px] text-[#B3261E] hover:underline"
+                  >
+                    Видалити
+                  </button>
+                )}
+              </div>
+            </Card>
+          )
+        })}
       </div>
 
       <div className="mb-8">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-medium">Ролі</h2>
-          <button
-            onClick={() => setShowRoleForm(v => !v)}
-            className="rounded bg-gray-800 px-3 py-1.5 text-sm text-white hover:bg-gray-900"
-          >
+          <h2 className="text-[15px] font-medium text-[#171A18]">Ролі</h2>
+          <Button onClick={() => setShowRoleForm(v => !v)}>
             + Нова роль
-          </button>
+          </Button>
         </div>
 
         <div className="mb-3 flex flex-wrap gap-2">
           {roles.map(role => (
             <span
               key={role.id}
-              className="rounded-full bg-gray-100 px-3 py-1 text-sm"
+              className="rounded-full border border-[#DFE3DC] bg-white px-3 py-1 text-[12px] text-[#3D423B]"
             >
               {role.name}
             </span>
@@ -131,94 +166,54 @@ function MembersContent() {
         </div>
 
         {showRoleForm && (
-          <form
-            onSubmit={roleForm.handleSubmit(onRoleSubmit)}
-            className="space-y-3 rounded-lg border bg-white p-4"
-          >
-            <div>
-              <input
+          <form onSubmit={roleForm.handleSubmit(onRoleSubmit)}>
+            <Card className="space-y-3">
+              <Input
                 placeholder="Назва ролі (наприклад Manager)"
                 {...roleForm.register('name')}
-                className="w-full rounded border px-3 py-2"
+                error={roleForm.formState.errors.name?.message}
               />
-              {roleForm.formState.errors.name && (
-                <p className="mt-1 text-sm text-red-600">
-                  {roleForm.formState.errors.name.message}
-                </p>
-              )}
-            </div>
+              <Input placeholder="Опис (необов'язково)" {...roleForm.register('description')} />
 
-            <div>
-              <input
-                placeholder="Опис (необов'язково)"
-                {...roleForm.register('description')}
-                className="w-full rounded border px-3 py-2"
-              />
-            </div>
+              {roleError && <p className="text-[12px] text-[#B3261E]">{roleError}</p>}
 
-            {roleError && <p className="text-sm text-red-600">{roleError}</p>}
-
-            <button
-              type="submit"
-              disabled={roleForm.formState.isSubmitting}
-              className="rounded bg-gray-800 px-4 py-2 text-white hover:bg-gray-900 disabled:opacity-50"
-            >
-              {roleForm.formState.isSubmitting ? 'Створення...' : 'Створити роль'}
-            </button>
+              <Button type="submit" disabled={roleForm.formState.isSubmitting}>
+                {roleForm.formState.isSubmitting ? 'Створення...' : 'Створити роль'}
+              </Button>
+            </Card>
           </form>
         )}
       </div>
 
-      <h2 className="mb-3 text-lg font-medium">Запросити учасника</h2>
-      <form
-        onSubmit={inviteForm.handleSubmit(onInviteSubmit)}
-        className="space-y-3 rounded-lg border bg-white p-4"
-      >
-        <div>
-          <input
+      <h2 className="mb-3 text-[15px] font-medium text-[#171A18]">Запросити учасника</h2>
+      <form onSubmit={inviteForm.handleSubmit(onInviteSubmit)}>
+        <Card className="space-y-3">
+          <Input
             type="email"
             placeholder="Email"
             {...inviteForm.register('email')}
-            className="w-full rounded border px-3 py-2"
+            error={inviteForm.formState.errors.email?.message}
           />
-          {inviteForm.formState.errors.email && (
-            <p className="mt-1 text-sm text-red-600">
-              {inviteForm.formState.errors.email.message}
-            </p>
-          )}
-        </div>
 
-        <div>
-          <select
-            {...inviteForm.register('roleId')}
-            className="w-full rounded border px-3 py-2"
-          >
+          <Select {...inviteForm.register('roleId')}>
             <option value="">Оберіть роль</option>
             {roles.map(role => (
-              <option key={role.id} value={role.id}>
-                {role.name}
-              </option>
+              <option key={role.id} value={role.id}>{role.name}</option>
             ))}
-          </select>
+          </Select>
           {inviteForm.formState.errors.roleId && (
-            <p className="mt-1 text-sm text-red-600">
+            <p className="text-[12px] text-[#B3261E]">
               {inviteForm.formState.errors.roleId.message}
             </p>
           )}
-        </div>
 
-        {inviteError && <p className="text-sm text-red-600">{inviteError}</p>}
-        {inviteSuccess && (
-          <p className="text-sm text-green-600">{inviteSuccess}</p>
-        )}
+          {inviteError && <p className="text-[12px] text-[#B3261E]">{inviteError}</p>}
+          {inviteSuccess && <p className="text-[12px] text-[#24493B]">{inviteSuccess}</p>}
 
-        <button
-          type="submit"
-          disabled={inviteForm.formState.isSubmitting}
-          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-        >
-          {inviteForm.formState.isSubmitting ? 'Надсилання...' : 'Запросити'}
-        </button>
+          <Button type="submit" disabled={inviteForm.formState.isSubmitting}>
+            {inviteForm.formState.isSubmitting ? 'Надсилання...' : 'Запросити'}
+          </Button>
+        </Card>
       </form>
     </div>
   )

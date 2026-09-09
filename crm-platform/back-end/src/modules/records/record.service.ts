@@ -17,7 +17,7 @@ export class RecordService {
     private readonly prisma: PrismaService,
     private readonly workspaceAccess: WorkspaceAccessService,
     private readonly workflowEvents: WorkflowEventsService,
-  ) {}
+  ) { }
 
   async create(moduleId: string, userId: string, dto: CreateRecordDto) {
     await this.workspaceAccess.ensureModuleAccess(moduleId, userId);
@@ -79,36 +79,44 @@ export class RecordService {
         `Sorting by "${sortBy}" is not supported yet, use one of: ${allowedSortFields.join(', ')}`,
       );
     }
+    const OPERATOR_SUFFIXES = [
+      '_contains', '_startsWith', '_gt', '_lt', '_gte', '_lte',
+      '_isEmpty', '_isNotEmpty', '_ne',
+    ] as const
+
+    function parseFilterKey(rawKey: string): { fieldKey: string; operator: string } {
+      for (const suffix of OPERATOR_SUFFIXES) {
+        if (rawKey.endsWith(suffix)) {
+          return { fieldKey: rawKey.slice(0, -suffix.length), operator: suffix.slice(1) }
+        }
+      }
+      return { fieldKey: rawKey, operator: 'equals' }
+    }
 
     const reservedKeys = ['page', 'limit', 'sortBy', 'sortOrder'];
 
     const filterEntries = Object.entries(query).filter(
-      ([key]) => !reservedKeys.includes(key),
-    );
+      ([key]) => !reservedKeys.includes(key) && key !== 'match',
+    )
 
-    const conditions: Prisma.RecordWhereInput[] = filterEntries.map(
-      ([key, rawValue]) => {
-        const field = fields.find((f) => f.key === key);
+    const conditions: Prisma.RecordWhereInput[] = filterEntries.map(([rawKey, rawValue]) => {
+      const { fieldKey, operator } = parseFilterKey(rawKey)
+      const field = fields.find(f => f.key === fieldKey)
 
-        if (!field) {
-          throw new BadRequestException(`Unknown filter field "${key}"`);
-        }
+      if (!field) {
+        throw new BadRequestException(`Unknown filter field "${fieldKey}"`)
+      }
 
-        return {
-          data: {
-            path: [key],
-            equals: this.castFilterValue(field, rawValue),
-            not: undefined,
-          },
-        } as Prisma.RecordWhereInput;
-      },
-    );
+      return this.buildCondition(field, operator, rawValue)
+    })
+
+    const matchMode = query.match === 'any' ? 'OR' : 'AND'
 
     const where: Prisma.RecordWhereInput = {
       moduleId,
       isArchived: false,
-      ...(conditions.length > 0 && { AND: conditions }),
-    };
+      ...(conditions.length > 0 && { [matchMode]: conditions }),
+    }
 
     const [items, total] = await this.prisma.$transaction([
       this.prisma.record.findMany({
@@ -154,6 +162,39 @@ export class RecordService {
         return rawValue;
     }
   }
+
+  private buildCondition(
+  field: Field,
+  operator: string,
+  rawValue: string,
+): Prisma.RecordWhereInput {
+  const path = [field.key]
+
+  switch (operator) {
+    case 'contains':
+      return { data: { path, string_contains: rawValue } as Prisma.JsonFilter }
+    case 'startsWith':
+      return { data: { path, string_starts_with: rawValue } as Prisma.JsonFilter }
+    case 'gt':
+      return { data: { path, gt: this.castFilterValue(field, rawValue) } as Prisma.JsonFilter }
+    case 'lt':
+      return { data: { path, lt: this.castFilterValue(field, rawValue) } as Prisma.JsonFilter }
+    case 'gte':
+      return { data: { path, gte: this.castFilterValue(field, rawValue) } as Prisma.JsonFilter }
+    case 'lte':
+      return { data: { path, lte: this.castFilterValue(field, rawValue) } as Prisma.JsonFilter }
+    case 'ne':
+      return { data: { path, not: this.castFilterValue(field, rawValue) } as Prisma.JsonFilter }
+    case 'isEmpty':
+      return { data: { path, equals: Prisma.JsonNull } as Prisma.JsonFilter }
+    case 'isNotEmpty':
+      return { data: { path, not: Prisma.JsonNull } as Prisma.JsonFilter }
+    default:
+      return {
+        data: { path, equals: this.castFilterValue(field, rawValue) } as Prisma.JsonFilter,
+      }
+  }
+}
 
   async findOne(recordId: string, userId: string) {
     const record = await this.findRecordOrThrow(recordId);

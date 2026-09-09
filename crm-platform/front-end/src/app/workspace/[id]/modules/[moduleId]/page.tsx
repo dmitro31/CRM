@@ -2,13 +2,20 @@
 
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AxiosError } from 'axios'
-import Link from 'next/link'
+import { ArrowRight } from 'lucide-react'
 
 import { ProtectedRoute } from '@/components/protected-route'
+import { Button } from '@/shared/UI/Button'
+import { Input } from '@/shared/UI/Input'
+import { Select } from '@/shared/UI/Select'
+import { Card } from '@/shared/UI/Card'
+import { PageHeader } from '@/shared/UI/PageHeader'
+import { EmptyState } from '@/shared/UI/EmptyState'
 import * as metadataApi from '@/lib/metadata-api'
 import {
     createFieldSchema,
@@ -29,6 +36,7 @@ function ModuleDetailContent() {
     const queryClient = useQueryClient()
     const [showForm, setShowForm] = useState(false)
     const [serverError, setServerError] = useState<string | null>(null)
+    const [deletingFieldId, setDeletingFieldId] = useState<string | null>(null)
 
     const { data: module_ } = useQuery({
         queryKey: ['module', moduleId],
@@ -58,10 +66,7 @@ function ModuleDetailContent() {
         setServerError(null)
         try {
             const options = needsOptions
-                ? (data.optionsRaw ?? '')
-                    .split(',')
-                    .map(s => s.trim())
-                    .filter(Boolean)
+                ? (data.optionsRaw ?? '').split(',').map(s => s.trim()).filter(Boolean)
                 : undefined
 
             await metadataApi.createField(moduleId, {
@@ -84,113 +89,141 @@ function ModuleDetailContent() {
         }
     }
 
+    const handleDeleteField = async (fieldId: string) => {
+        const comfirmed = window.confirm(
+            'Видалити це поле? Дані цього поля в існуючих записах можуть залишитися в JSON записів.'
+        )
+
+        if (!comfirmed) return
+
+
+        try {
+            setDeletingFieldId(fieldId)
+            setServerError(null)
+
+            await metadataApi.deleteField(fieldId)
+
+            await queryClient.invalidateQueries({
+                queryKey: ['fields', moduleId],
+            })
+        } catch (err) {
+            const message =
+                err instanceof AxiosError
+                    ? (err.response?.data as { message?: string })?.message
+                    : undefined
+
+            setServerError(message ?? 'Не вдалося видалити поле')
+        } finally {
+            setDeletingFieldId(null)
+        }
+    }
+
     return (
-        <div className="mx-auto max-w-3xl p-8">
-            <div>
-                <Link
-                    href={`/workspace/${workspaceId}/modules/${moduleId}/records`}
-                    className="mb-6 inline-block text-blue-600 hover:underline"
-                >
-                    Переглянути записи →
-                </Link>
-            </div>
-            <h1 className="mb-1 text-2xl font-semibold">{module_?.name}</h1>
+        <div className="mx-auto max-w-3xl px-8 py-10">
+            <Link
+                href={`/workspace/${workspaceId}/modules/${moduleId}/records`}
+                className="mb-6 inline-flex items-center gap-1 text-[13px] text-[#24493B] hover:underline"
+            >
+                Переглянути записи <ArrowRight size={13} />
+            </Link>
+
+            <h1 className="text-[20px] font-medium text-[#171A18]">{module_?.name}</h1>
             {module_?.description && (
-                <p className="mb-6 text-gray-500">{module_.description}</p>
+                <p className="mt-1 text-[13px] text-[#6C716A]">{module_.description}</p>
             )}
 
-            <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-medium">Поля</h2>
-                <button
-                    onClick={() => setShowForm(v => !v)}
-                    className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
-                >
+            <PageHeader
+                title=""
+                actions={undefined}
+            />
+            <div className="mt-8 mb-4 flex items-center justify-between">
+                <h2 className="text-[15px] font-medium text-[#171A18]">Поля</h2>
+                <Button size="sm" onClick={() => setShowForm(v => !v)}>
                     + Додати поле
-                </button>
+                </Button>
             </div>
 
             {showForm && (
-                <form
-                    onSubmit={handleSubmit(onSubmit)}
-                    className="mb-6 space-y-3 rounded-lg border bg-white p-4"
-                >
-                    <div>
-                        <input
-                            placeholder="Назва поля"
-                            {...register('name')}
-                            className="w-full rounded border px-3 py-2"
-                        />
-                        {errors.name && (
-                            <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-                        )}
-                    </div>
+                <form onSubmit={handleSubmit(onSubmit)} className="mb-6">
+                    <Card className="space-y-3">
+                        <Input placeholder="Назва поля" {...register('name')} error={errors.name?.message} />
 
-                    <div>
-                        <select {...register('type')} className="w-full rounded border px-3 py-2">
+                        <Select {...register('type')}>
                             {Object.entries(FIELD_TYPE_LABELS).map(([value, label]) => (
-                                <option key={value} value={value}>
-                                    {label}
-                                </option>
+                                <option key={value} value={value}>{label}</option>
                             ))}
-                        </select>
-                    </div>
+                        </Select>
 
-                    {needsOptions && (
-                        <div>
-                            <input
+                        {needsOptions && (
+                            <Input
                                 placeholder="Варіанти через кому (наприклад: Новий, В роботі, Завершено)"
                                 {...register('optionsRaw')}
-                                className="w-full rounded border px-3 py-2"
                             />
+                        )}
+
+                        <div className="flex gap-4">
+                            <label className="flex items-center gap-2 text-[13px] text-[#3D423B]">
+                                <input type="checkbox" {...register('required')} />
+                                Обов&apos;язкове
+                            </label>
+                            <label className="flex items-center gap-2 text-[13px] text-[#3D423B]">
+                                <input type="checkbox" {...register('unique')} />
+                                Унікальне
+                            </label>
                         </div>
-                    )}
 
-                    <div className="flex gap-4">
-                        <label className="flex items-center gap-2 text-sm">
-                            <input type="checkbox" {...register('required')} />
-                            Обов&apos;язкове
-                        </label>
-                        <label className="flex items-center gap-2 text-sm">
-                            <input type="checkbox" {...register('unique')} />
-                            Унікальне
-                        </label>
-                    </div>
+                        {serverError && <p className="text-[12px] text-[#B3261E]">{serverError}</p>}
 
-                    {serverError && <p className="text-sm text-red-600">{serverError}</p>}
-
-                    <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-                    >
-                        {isSubmitting ? 'Створення...' : 'Додати поле'}
-                    </button>
+                        <Button type="submit" disabled={isSubmitting} size="sm">
+                            {isSubmitting ? 'Створення...' : 'Додати поле'}
+                        </Button>
+                    </Card>
                 </form>
             )}
 
             <div className="space-y-2">
                 {fields.map(field => (
-                    <div
+                    <Card
                         key={field.id}
-                        className="flex items-center justify-between rounded border bg-white p-3"
+                        className="flex items-center justify-between"
                     >
                         <div>
-                            <div className="font-medium">
+                            <div className="text-[13.5px] font-medium text-[#171A18]">
                                 {field.name}
-                                {field.required && <span className="ml-1 text-red-500">*</span>}
+
+                                {field.required && (
+                                    <span className="ml-1 text-[#B3261E]">*</span>
+                                )}
                             </div>
-                            <div className="text-sm text-gray-500">
+
+                            <div className="mt-0.5 text-[12px] text-[#6C716A]">
                                 {FIELD_TYPE_LABELS[field.type]}
-                                {field.options && ` — ${field.options.join(', ')}`}
+
+                                {field.options &&
+                                    ` — ${field.options.join(', ')}`}
                             </div>
                         </div>
-                        <code className="text-xs text-gray-400">{field.key}</code>
-                    </div>
+
+                        <div className="flex items-center gap-3">
+                            <code className="font-mono text-[11px] text-[#8B9088]">
+                                {field.key}
+                            </code>
+
+                            <button
+                                type="button"
+                                onClick={() => handleDeleteField(field.id)}
+                                disabled={deletingFieldId === field.id}
+                                className="rounded-md px-2 py-1 text-[12px] text-[#B3261E] transition hover:bg-red-50 disabled:opacity-50"
+                            >
+                                {deletingFieldId === field.id
+                                    ? 'Видалення...'
+                                    : 'Видалити'}
+                            </button>
+                        </div>
+                    </Card>
                 ))}
 
-                {fields.length === 0 && (
-                    <p className="text-gray-500">Ще немає жодного поля.</p>
-                )}
+                {fields.length === 0 && <EmptyState title="Ще немає жодного поля." />}
             </div>
         </div>
     )

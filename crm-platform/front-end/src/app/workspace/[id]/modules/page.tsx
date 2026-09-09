@@ -9,9 +9,17 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { AxiosError } from 'axios'
 
 import { ProtectedRoute } from '@/components/protected-route'
-import * as metadataApi from '@/lib/metadata-api'
 import { AiFormGenerator } from '@/components/ai-form-generator'
-import { createModuleSchema, type CreateModuleFormData } from '@/lib/validation/metadata-schemas'
+import { Button } from '@/shared/UI/Button'
+import { Input } from '@/shared/UI/Input'
+import { Card } from '@/shared/UI/Card'
+import { PageHeader } from '@/shared/UI/PageHeader'
+import { EmptyState } from '@/shared/UI/EmptyState'
+import * as metadataApi from '@/lib/metadata-api'
+import {
+  createModuleSchema,
+  type CreateModuleFormData,
+} from '@/lib/validation/metadata-schemas'
 
 export default function ModulesPage() {
   return (
@@ -58,78 +66,54 @@ function ModulesContent() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-8">
+    <div className="mx-auto max-w-3xl px-8 py-10">
       <div className="mb-6">
         <AiFormGenerator
           workspaceId={workspaceId}
-          onCreated={() => void queryClient.invalidateQueries({ queryKey: ['modules', workspaceId] })}
+          onCreated={() =>
+            void queryClient.invalidateQueries({ queryKey: ['modules', workspaceId] })
+          }
         />
       </div>
-      <div className="mb-6 flex items-center justify-between">
 
-        <h1 className="text-2xl font-semibold">Модулі</h1>
-        <button
-          onClick={() => setShowForm(v => !v)}
-          className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
-        >
-          + Створити модуль
-        </button>
-      </div>
+      <PageHeader
+        title="Модулі"
+        actions={
+          <Button size="sm" onClick={() => setShowForm(v => !v)}>
+            + Створити модуль
+          </Button>
+        }
+      />
 
       {showForm && (
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="mb-6 space-y-3 rounded-lg border bg-white p-4"
-        >
-          <div>
-            <input
-              placeholder="Назва модуля (наприклад Клієнти)"
-              {...register('name')}
-              className="w-full rounded border px-3 py-2"
-            />
-            {errors.name && (
-              <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-            )}
-          </div>
-
-          <div>
-            <input
-              placeholder="Опис (необов'язково)"
-              {...register('description')}
-              className="w-full rounded border px-3 py-2"
-            />
-          </div>
-
-          {serverError && <p className="text-sm text-red-600">{serverError}</p>}
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
-          >
-            {isSubmitting ? 'Створення...' : 'Створити'}
-          </button>
+        <form onSubmit={handleSubmit(onSubmit)} className="mb-6">
+          <Card className="space-y-3">
+            <Input placeholder="Назва модуля (наприклад Клієнти)" {...register('name')} error={errors.name?.message} />
+            <Input placeholder="Опис (необов'язково)" {...register('description')} />
+            {serverError && <p className="text-[12px] text-[#B3261E]">{serverError}</p>}
+            <Button type="submit" disabled={isSubmitting} size="sm">
+              {isSubmitting ? 'Створення...' : 'Створити'}
+            </Button>
+          </Card>
         </form>
       )}
 
-      {isLoading && <p className="text-gray-500">Завантаження...</p>}
+      {isLoading && <p className="text-[13px] text-[#6C716A]">Завантаження...</p>}
 
       <div className="space-y-2">
         {modules.map(module => (
-          <Link
-            key={module.id}
-            href={`/workspace/${workspaceId}/modules/${module.id}`}
-            className="block rounded-lg border bg-white p-4 transition hover:border-gray-300"
-          >
-            <div className="font-medium">{module.name}</div>
-            {module.description && (
-              <div className="text-sm text-gray-500">{module.description}</div>
-            )}
+          <Link key={module.id} href={`/workspace/${workspaceId}/modules/${module.id}`}>
+            <Card hoverable>
+              <div className="text-[14px] font-medium text-[#171A18]">{module.name}</div>
+              {module.description && (
+                <div className="mt-0.5 text-[12.5px] text-[#6C716A]">{module.description}</div>
+              )}
+            </Card>
           </Link>
         ))}
 
         {!isLoading && modules.length === 0 && (
-          <p className="text-gray-500">Ще немає жодного модуля.</p>
+          <EmptyState title="Ще немає жодного модуля." />
         )}
       </div>
     </div>

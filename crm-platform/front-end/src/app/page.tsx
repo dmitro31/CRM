@@ -1,11 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, Layers, Workflow, Sparkles } from 'lucide-react'
-
-import Logo from '@/features/header/logo'
 import { useAuth } from '@/providers/auth-provider'
 
 export default function LandingPage() {
@@ -15,11 +11,6 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#F6F7F4] text-[#171A18]">
       <section className="mx-auto max-w-3xl px-8 pb-20 pt-24 text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#DFE3DC] bg-white px-3 py-1 font-mono text-[11px] text-[#6C716A]">
-          <Sparkles size={12} className="text-[#24493B]" />
-          Тепер з AI-конструктором форм
-        </span>
-
         <h1 className="mt-6 text-[42px] font-medium leading-[1.1] tracking-tight">
           CRM, яку ти будуєш під свій бізнес,
           <br />
@@ -30,7 +21,7 @@ export default function LandingPage() {
           Створюй власні модулі, поля й автоматизацію без коду. BoostFlow
           підлаштовується під те, як реально працює твоя команда.
         </p>
-      {isAuth ? (<div></div>) : (<div className="mt-8 flex items-center justify-center gap-3">
+        {isAuth ? (<div></div>) : (<div className="mt-8 flex items-center justify-center gap-3">
           <Link
             href="/register"
             className="flex items-center gap-2 rounded-md bg-[#24493B] px-5 py-2.5 text-[14px] font-medium text-white transition-colors hover:bg-[#1B392E]"
@@ -45,7 +36,7 @@ export default function LandingPage() {
             Увійти в акаунт
           </Link>
         </div>)}
-        
+
       </section>
 
       <section className="border-t border-[#DFE3DC] bg-white">

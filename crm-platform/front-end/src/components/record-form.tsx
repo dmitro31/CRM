@@ -72,7 +72,7 @@ export function RecordForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border bg-white p-4">
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-md border border-[#DFE3DC] bg-white p-4">
       {fields
         .filter(f => f.isActive)
         .map(field => (
@@ -91,14 +91,14 @@ export function RecordForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-md bg-[#24493B] px-4 py-2 text-[13px] font-medium text-white transition-colors hover:bg-[#1B392E] disabled:opacity-50"
         >
           {isSubmitting ? 'Збереження...' : submitLabel}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded border px-4 py-2 hover:bg-gray-50"
+          className="rounded-md border border-[#DFE3DC] px-4 py-2 text-[13px] transition-colors hover:bg-[#F6F7F4]"
         >
           Скасувати
         </button>

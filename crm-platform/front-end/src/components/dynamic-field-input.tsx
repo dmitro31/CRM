@@ -16,14 +16,14 @@ export function DynamicFieldInput({
   error,
 }: DynamicFieldInputProps) {
   const label = (
-    <label className="mb-1 block text-sm font-medium">
+    <label className="mb-1 block text-[13px] font-medium text-[#171A18]">
       {field.name}
       {field.required && <span className="ml-1 text-red-500">*</span>}
     </label>
   )
 
   const errorText = error && (
-    <p className="mt-1 text-sm text-red-600">{error}</p>
+    <p className="mt-1 text-[12px] text-[#B3261E]">{error}</p>
   )
 
   switch (field.type) {
@@ -35,7 +35,7 @@ export function DynamicFieldInput({
             value={(value as string) ?? ''}
             onChange={e => onChange(e.target.value)}
             placeholder={field.placeholder ?? undefined}
-            className="w-full rounded border px-3 py-2"
+            className="w-full rounded-md border border-[#DFE3DC] px-3 py-2 text-[13px] text-[#171A18] focus:border-[#24493B]/40 focus:outline-none"
             rows={3}
           />
           {errorText}
@@ -53,7 +53,7 @@ export function DynamicFieldInput({
               onChange(e.target.value === '' ? undefined : Number(e.target.value))
             }
             placeholder={field.placeholder ?? undefined}
-            className="w-full rounded border px-3 py-2"
+            className="w-full rounded-md border border-[#DFE3DC] px-3 py-2 text-[13px] text-[#171A18] focus:border-[#24493B]/40 focus:outline-none"
           />
           {errorText}
         </div>
@@ -82,7 +82,7 @@ export function DynamicFieldInput({
             type="date"
             value={(value as string) ?? ''}
             onChange={e => onChange(e.target.value)}
-            className="w-full rounded border px-3 py-2"
+            className="w-full rounded-md border border-[#DFE3DC] px-3 py-2 text-[13px] text-[#171A18] focus:border-[#24493B]/40 focus:outline-none"
           />
           {errorText}
         </div>
@@ -96,7 +96,7 @@ export function DynamicFieldInput({
             type="datetime-local"
             value={(value as string) ?? ''}
             onChange={e => onChange(e.target.value)}
-            className="w-full rounded border px-3 py-2"
+            className="w-full rounded-md border border-[#DFE3DC] px-3 py-2 text-[13px] text-[#171A18] focus:border-[#24493B]/40 focus:outline-none"
           />
           {errorText}
         </div>
@@ -111,7 +111,7 @@ export function DynamicFieldInput({
             value={(value as string) ?? ''}
             onChange={e => onChange(e.target.value)}
             placeholder={field.placeholder ?? undefined}
-            className="w-full rounded border px-3 py-2"
+            className="w-full rounded-md border border-[#DFE3DC] px-3 py-2 text-[13px] text-[#171A18] focus:border-[#24493B]/40 focus:outline-none"
           />
           {errorText}
         </div>
@@ -126,7 +126,7 @@ export function DynamicFieldInput({
             value={(value as string) ?? ''}
             onChange={e => onChange(e.target.value)}
             placeholder={field.placeholder ?? undefined}
-            className="w-full rounded border px-3 py-2"
+            className="w-full rounded-md border border-[#DFE3DC] px-3 py-2 text-[13px] text-[#171A18] focus:border-[#24493B]/40 focus:outline-none"
           />
           {errorText}
         </div>
@@ -141,7 +141,7 @@ export function DynamicFieldInput({
             value={(value as string) ?? ''}
             onChange={e => onChange(e.target.value)}
             placeholder={field.placeholder ?? undefined}
-            className="w-full rounded border px-3 py-2"
+            className="w-full rounded-md border border-[#DFE3DC] px-3 py-2 text-[13px] text-[#171A18] focus:border-[#24493B]/40 focus:outline-none"
           />
           {errorText}
         </div>
@@ -154,7 +154,7 @@ export function DynamicFieldInput({
           <select
             value={(value as string) ?? ''}
             onChange={e => onChange(e.target.value || undefined)}
-            className="w-full rounded border px-3 py-2"
+            className="w-full rounded-md border border-[#DFE3DC] px-3 py-2 text-[13px] text-[#171A18] focus:border-[#24493B]/40 focus:outline-none"
           >
             <option value="">— Оберіть —</option>
             {field.options?.map(option => (
@@ -178,11 +178,10 @@ export function DynamicFieldInput({
               return (
                 <label
                   key={option}
-                  className={`cursor-pointer rounded-full border px-3 py-1 text-sm ${
-                    isChecked
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200'
-                  }`}
+                  className={`cursor-pointer rounded-full border px-3 py-1 text-sm ${isChecked
+                      ? 'border-[#24493B]/40 bg-[#E7EEE9] text-[#24493B]'
+                      : 'border-[#DFE3DC] text-[#3D423B]'
+                    }`}
                 >
                   <input
                     type="checkbox"
@@ -226,7 +225,7 @@ export function DynamicFieldInput({
             value={(value as string) ?? ''}
             onChange={e => onChange(e.target.value)}
             placeholder={field.placeholder ?? undefined}
-            className="w-full rounded border px-3 py-2"
+            className="w-full rounded-md border border-[#DFE3DC] px-3 py-2 text-[13px] text-[#171A18] focus:border-[#24493B]/40 focus:outline-none"
           />
           {errorText}
         </div>
