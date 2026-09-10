@@ -15,6 +15,7 @@ import * as recordApi from '@/lib/record-api'
 import type { CrmRecord } from '@/types/record'
 import { FilterBuilder, type FilterRule } from '@/components/filter-builder'
 import { buildFilterQuery } from '@/lib/record-api'
+import Link from 'next/link'
 
 export default function RecordsPage() {
   return (
@@ -25,14 +26,12 @@ export default function RecordsPage() {
 }
 
 function RecordsContent() {
-  const { moduleId } = useParams<{ id: string; moduleId: string }>()
+  const { id: workspaceId, moduleId } = useParams<{ id: string; moduleId: string }>()
   const queryClient = useQueryClient()
   const [filterRules, setFilterRules] = useState<FilterRule[]>([])
   const [matchMode, setMatchMode] = useState<'all' | 'any'>('all')
 
   const [page, setPage] = useState(1)
-  const [filterField, setFilterField] = useState('')
-  const [filterValue, setFilterValue] = useState('')
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingRecord, setEditingRecord] = useState<CrmRecord | null>(null)
 
@@ -162,7 +161,16 @@ function RecordsContent() {
                       Видалити
                     </button>
                   </td>
+                  <td>
+                    <Link
+                      href={`/workspace/${workspaceId}/modules/${moduleId}/records/${record.id}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Деталі
+                    </Link>
+                  </td>
                 </tr>
+
               ))}
             </tbody>
           </table>

@@ -30,6 +30,9 @@ import { RequestIdMiddleware } from 'common/middleware/request-id.middleware';
 import { AppThrottlerGuard } from 'common/guards/app-throttler.guard';
 import type { IncomingMessage } from 'http';
 import { NotificationModule } from 'modules/notifications/notification.module';
+import { ActivityModule } from 'modules/activity/activity.module';
+import { CommentsModule } from 'modules/comments/comments.module';
+import { TasksModule } from 'modules/tasks/tasks.module';
 
 @Module({
   imports: [
@@ -56,6 +59,9 @@ import { NotificationModule } from 'modules/notifications/notification.module';
     NotificationModule,
     MetadataModule,
     RecordModule,
+    ActivityModule,
+    CommentsModule,
+    TasksModule,
     FilesModule,
     WorkflowModule,
     AiModule,

@@ -45,6 +45,11 @@ model User {
   refreshTokens      RefreshToken[]
   verificationToken  VerificationToken?
 
+  comments        Comment[]
+  tasksAssigned   Task[]          @relation("TaskAssignee")
+  tasksCreated    Task[]          @relation("TaskCreator")
+  activityEvents  ActivityEvent[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -90,6 +95,9 @@ model Workspace {
   files       File[]
   workflows   Workflow[]
   auditLogs   AuditLog[]
+
+  tasks           Task[]
+  activityEvents  ActivityEvent[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -257,6 +265,10 @@ model Record {
   createdBy    User @relation(fields: [createdById], references: [id], onDelete: Restrict)
 
   isArchived   Boolean @default(false)
+
+  comments        Comment[]
+  tasks           Task[]
+  activityEvents  ActivityEvent[]
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -438,4 +450,91 @@ model Invitation {
   @@unique([workspaceId, email, status])
   @@index([workspaceId])
   @@index([token])
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum ActivityType {
+  RECORD_CREATED
+  RECORD_UPDATED
+  RECORD_ARCHIVED
+  COMMENT_ADDED
+  COMMENT_UPDATED
+  COMMENT_DELETED
+  TASK_CREATED
+  TASK_UPDATED
+  TASK_COMPLETED
+  TASK_DELETED
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+
+  recordId  String
+  record    Record   @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([recordId])
+}
+
+model Task {
+  id          String     @id @default(uuid())
+
+  title       String
+  description String?
+
+  status      TaskStatus @default(TODO)
+  dueDate     DateTime?
+
+  workspaceId String
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  recordId    String?
+  record      Record?    @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  assigneeId  String?
+  assignee    User?      @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  createdById String
+  createdBy   User       @relation("TaskCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([workspaceId])
+  @@index([recordId])
+  @@index([assigneeId])
+}
+
+model ActivityEvent {
+  id          String       @id @default(uuid())
+
+  type        ActivityType
+
+  workspaceId String
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  recordId    String?
+  record      Record?      @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  data        Json?
+
+  createdAt   DateTime     @default(now())
+
+  @@index([workspaceId])
+  @@index([recordId])
+  @@index([createdAt])
 }
