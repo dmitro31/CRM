@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { AiService } from 'core/ai/ai.service';
 import { PrismaService } from 'core/database/prisma.service';
 import { WorkspaceAccessService } from 'modules/workspace/workspace-access.service';
@@ -44,6 +48,9 @@ const TOOLS = [
   },
 ];
 
+const MAX_HISTORY_MESSAGES = 10;
+const TITLE_MAX_LENGTH = 60;
+
 @Injectable()
 export class AiAssistantService {
   constructor(
@@ -56,11 +63,40 @@ export class AiAssistantService {
   async ask(workspaceId: string, userId: string, dto: AskAssistantDto) {
     await this.workspaceAccess.ensureMembership(workspaceId, userId);
 
+    const conversation = await this.resolveConversation(workspaceId, userId, dto);
+
+    await this.prisma.aiMessage.create({
+      data: {
+        conversationId: conversation.id,
+        role: 'USER',
+        content: dto.question,
+      },
+    });
+
+    const history = await this.prisma.aiMessage.findMany({
+      where: { conversationId: conversation.id },
+      orderBy: { createdAt: 'desc' },
+      take: MAX_HISTORY_MESSAGES,
+    });
+
+    const historyText = history
+      .reverse()
+      .map((message) =>
+        message.role === 'USER'
+          ? `Користувач: ${message.content}`
+          : `Асистент: ${message.content}`,
+      )
+      .join('\n');
+
     const prompt = `Ти — асистент CRM-системи. Відповідай на питання користувача коротко і по суті, українською мовою.
 Використовуй інструменти, щоб отримати реальні дані перед відповіддю — ніколи не вигадуй цифри чи факти.
 Якщо інструмент повернув 0 результатів — це валідна відповідь, одразу повідом про це користувачу, не перевіряй те саме повторно і не досліджуй інші модулі без потреби.
 
-Питання користувача: "${dto.question}"`;
+Історія розмови (для контексту):
+${historyText}
+
+Дай відповідь на останнє повідомлення користувача.`;
+
     const answer = await this.ai.chatWithTools(
       prompt,
       TOOLS,
@@ -68,7 +104,83 @@ export class AiAssistantService {
         this.executeTool(workspaceId, userId, name, args),
     );
 
-    return { answer };
+    await this.prisma.aiMessage.create({
+      data: {
+        conversationId: conversation.id,
+        role: 'ASSISTANT',
+        content: answer,
+      },
+    });
+
+    await this.prisma.aiConversation.update({
+      where: { id: conversation.id },
+      data: { updatedAt: new Date() },
+    });
+
+    return { answer, conversationId: conversation.id };
+  }
+
+  async findConversations(workspaceId: string, userId: string) {
+    await this.workspaceAccess.ensureMembership(workspaceId, userId);
+
+    return this.prisma.aiConversation.findMany({
+      where: { workspaceId, userId },
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
+
+  async findMessages(conversationId: string, userId: string) {
+    const conversation = await this.findConversationOrThrow(conversationId, userId);
+
+    return this.prisma.aiMessage.findMany({
+      where: { conversationId: conversation.id },
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
+  async removeConversation(conversationId: string, userId: string) {
+    await this.findConversationOrThrow(conversationId, userId);
+
+    await this.prisma.aiConversation.delete({
+      where: { id: conversationId },
+    });
+
+    return { message: 'Conversation deleted successfully' };
+  }
+
+  private async resolveConversation(
+    workspaceId: string,
+    userId: string,
+    dto: AskAssistantDto,
+  ) {
+    if (dto.conversationId) {
+      return this.findConversationOrThrow(dto.conversationId, userId);
+    }
+
+    const title =
+      dto.question.length > TITLE_MAX_LENGTH
+        ? `${dto.question.slice(0, TITLE_MAX_LENGTH - 1)}…`
+        : dto.question;
+
+    return this.prisma.aiConversation.create({
+      data: { workspaceId, userId, title },
+    });
+  }
+
+  private async findConversationOrThrow(conversationId: string, userId: string) {
+    const conversation = await this.prisma.aiConversation.findUnique({
+      where: { id: conversationId },
+    });
+
+    if (!conversation) {
+      throw new NotFoundException('Conversation not found');
+    }
+
+    if (conversation.userId !== userId) {
+      throw new ForbiddenException('You do not have access to this conversation');
+    }
+
+    return conversation;
   }
 
   private async executeTool(

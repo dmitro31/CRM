@@ -31,3 +31,13 @@ export interface CrmModule {
   workspaceId: string
   fields?: Field[]
 }
+export interface View {
+  id: string
+  name: string
+  type: 'TABLE' | 'BOARD' | 'CALENDAR' | 'LIST'
+  filters: { rules: unknown[]; matchMode: 'all' | 'any' } | null
+  sorting: { sortBy: string; sortOrder: 'asc' | 'desc' } | null
+  columns: string[] | null
+  isDefault: boolean
+  moduleId: string
+}

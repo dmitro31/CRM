@@ -50,6 +50,8 @@ model User {
   tasksCreated    Task[]          @relation("TaskCreator")
   activityEvents  ActivityEvent[]
 
+  aiConversations AiConversation[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -95,6 +97,8 @@ model Workspace {
   files       File[]
   workflows   Workflow[]
   auditLogs   AuditLog[]
+
+  aiConversations AiConversation[]
 
   tasks           Task[]
   activityEvents  ActivityEvent[]
@@ -537,4 +541,42 @@ model ActivityEvent {
   @@index([workspaceId])
   @@index([recordId])
   @@index([createdAt])
+}
+
+enum AiMessageRole {
+  USER
+  ASSISTANT
+}
+
+model AiConversation {
+  id          String   @id @default(uuid())
+  title       String
+
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  messages    AiMessage[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model AiMessage {
+  id             String         @id @default(uuid())
+
+  conversationId String
+  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  role           AiMessageRole
+  content        String
+
+  createdAt      DateTime       @default(now())
+
+  @@index([conversationId])
 }

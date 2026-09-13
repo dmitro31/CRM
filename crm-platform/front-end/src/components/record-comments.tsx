@@ -6,6 +6,8 @@ import { AxiosError } from 'axios'
 
 import * as commentApi from '@/lib/comment-api'
 import { useAuth } from '@/providers/auth-provider'
+import { MentionTextarea } from '@/components/mention-textarea'
+import { formatCommentContent } from '@/lib/format-mentions'
 
 interface RecordCommentsProps {
   recordId: string
@@ -77,12 +79,12 @@ export function RecordComments({ recordId }: RecordCommentsProps) {
   return (
     <div>
       <form onSubmit={e => void handleSubmit(e)} className="mb-6 space-y-2">
-        <textarea
+        <MentionTextarea
           value={content}
-          onChange={e => setContent(e.target.value)}
-          placeholder="Написати коментар..."
+          onChange={setContent}
+          placeholder="Написати коментар... (@ для згадки)"
           rows={3}
-          className="w-full rounded border px-3 py-2"
+          className="w-full rounded-md border border-[#DFE3DC] px-3 py-2 text-[13px] focus:border-[#24493B]/40 focus:outline-none"
         />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
@@ -110,11 +112,11 @@ export function RecordComments({ recordId }: RecordCommentsProps) {
 
             {editingId === comment.id ? (
               <div className="space-y-2">
-                <textarea
+                <MentionTextarea
                   value={editingContent}
-                  onChange={e => setEditingContent(e.target.value)}
+                  onChange={setEditingContent}
                   rows={2}
-                  className="w-full rounded border px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-[#DFE3DC] px-2 py-1.5 text-[13px] focus:border-[#24493B]/40 focus:outline-none"
                 />
                 <div className="flex gap-2">
                   <button
@@ -148,6 +150,7 @@ export function RecordComments({ recordId }: RecordCommentsProps) {
                     >
                       Видалити
                     </button>
+                    <p className="text-[13px] text-[#3D423B]">{formatCommentContent(comment.content)}</p>
                   </div>
                 )}
               </>

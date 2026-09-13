@@ -1,4 +1,12 @@
-import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import type { User } from '@prisma/client';
 
 import { CurrentUser } from 'common/decorators/current-user.decorator';
@@ -61,5 +69,29 @@ export class AiController {
     @Body() dto: AskAssistantDto,
   ) {
     return this.aiAssistantService.ask(workspaceId, user.id, dto);
+  }
+
+  @Get('conversations')
+  listConversations(
+    @Param('workspaceId') workspaceId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.aiAssistantService.findConversations(workspaceId, user.id);
+  }
+
+  @Get('conversations/:conversationId/messages')
+  listMessages(
+    @Param('conversationId') conversationId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.aiAssistantService.findMessages(conversationId, user.id);
+  }
+
+  @Delete('conversations/:conversationId')
+  removeConversation(
+    @Param('conversationId') conversationId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.aiAssistantService.removeConversation(conversationId, user.id);
   }
 }

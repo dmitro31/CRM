@@ -3,7 +3,7 @@ import { PrismaService } from 'core/database/prisma.service'
 
 @Injectable()
 export class NotificationService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async findAll(userId: string) {
     return this.prisma.notification.findMany({
@@ -34,5 +34,14 @@ export class NotificationService {
       data: { isRead: true },
     })
     return { message: 'All notifications marked as read' }
+  }
+  async create(payload: {
+    userId: string
+    title: string
+    message: string
+    type: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR'
+    link?: string
+  }) {
+    return this.prisma.notification.create({ data: payload })
   }
 }

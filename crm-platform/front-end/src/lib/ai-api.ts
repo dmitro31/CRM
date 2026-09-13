@@ -1,5 +1,5 @@
 import { apiClient } from './api-client'
-import type { FormDraft, AskResponse } from '@/types/ai'
+import type { FormDraft, AskResponse, AiConversation, AiMessage } from '@/types/ai'
 import type { WorkflowDraft } from '@/types/workflow'
 import type { CrmModule } from '@/types/metadata'
 
@@ -31,10 +31,37 @@ export async function generateWorkflow(
   return data
 }
 
-export async function askAssistant(workspaceId: string, question: string) {
+export async function askAssistant(
+  workspaceId: string,
+  question: string,
+  conversationId?: string,
+) {
   const { data } = await apiClient.post<AskResponse>(
     `/workspaces/${workspaceId}/ai/ask`,
-    { question },
+    { question, conversationId },
   )
   return data
+}
+
+export async function getConversations(workspaceId: string) {
+  const { data } = await apiClient.get<AiConversation[]>(
+    `/workspaces/${workspaceId}/ai/conversations`,
+  )
+  return data
+}
+
+export async function getConversationMessages(
+  workspaceId: string,
+  conversationId: string,
+) {
+  const { data } = await apiClient.get<AiMessage[]>(
+    `/workspaces/${workspaceId}/ai/conversations/${conversationId}/messages`,
+  )
+  return data
+}
+
+export async function deleteConversation(workspaceId: string, conversationId: string) {
+  await apiClient.delete(
+    `/workspaces/${workspaceId}/ai/conversations/${conversationId}`,
+  )
 }

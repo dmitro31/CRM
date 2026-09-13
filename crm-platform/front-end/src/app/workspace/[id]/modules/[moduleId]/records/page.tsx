@@ -16,6 +16,9 @@ import type { CrmRecord } from '@/types/record'
 import { FilterBuilder, type FilterRule } from '@/components/filter-builder'
 import { buildFilterQuery } from '@/lib/record-api'
 import Link from 'next/link'
+import { ViewTabs } from '@/components/view-tabs'
+import * as viewApi from '@/lib/view-api'
+import { useEffect } from 'react'
 
 export default function RecordsPage() {
   return (
@@ -30,6 +33,9 @@ function RecordsContent() {
   const queryClient = useQueryClient()
   const [filterRules, setFilterRules] = useState<FilterRule[]>([])
   const [matchMode, setMatchMode] = useState<'all' | 'any'>('all')
+  const [activeViewId, setActiveViewId] = useState<string | null>(null)
+  const [sortBy] = useState('createdAt')
+  const [sortOrder] = useState<'asc' | 'desc'>('desc')
 
   const [page, setPage] = useState(1)
   const [showCreateForm, setShowCreateForm] = useState(false)
@@ -80,6 +86,21 @@ function RecordsContent() {
     invalidateRecords()
   }
 
+  const { data: views = [] } = useQuery({
+    queryKey: ['views', moduleId],
+    queryFn: () => viewApi.getViews(moduleId),
+  })
+
+  useEffect(() => {
+    if (!activeViewId) return
+    const view = views.find(v => v.id === activeViewId)
+    if (view?.filters) {
+      setFilterRules(view.filters.rules as FilterRule[])
+      setMatchMode(view.filters.matchMode)
+    }
+    setPage(1)
+  }, [activeViewId, views])
+
   const totalPages = recordsData ? Math.ceil(recordsData.total / recordsData.limit) : 1
 
   return (
@@ -91,6 +112,13 @@ function RecordsContent() {
             + Новий запис
           </Button>
         }
+      />
+      <ViewTabs
+        moduleId={moduleId}
+        activeViewId={activeViewId}
+        onSelectView={setActiveViewId}
+        currentState={{ rules: filterRules, matchMode, sortBy, sortOrder }}
+        displayFields={displayFields}
       />
 
       <FilterBuilder
