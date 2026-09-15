@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { LogOut, User as UserIcon } from 'lucide-react'
+import Link from 'next/link'
 
 import { useAuth } from '@/providers/auth-provider'
 
@@ -42,6 +43,12 @@ export default function UserMenu() {
             </p>
             <p className="truncate text-[11px] text-[#6C716A]">{user.email}</p>
           </div>
+          <Link
+            href="/docs"
+            className="flex items-center gap-2 rounded-[6px] px-2.5 py-2 text-[12.5px] text-[#3D423B] transition-colors hover:bg-[#F6F7F4]"
+          >
+            Документація
+          </Link>
 
           <div className="border-t border-[#EEF0EB] pt-1">
             <button
