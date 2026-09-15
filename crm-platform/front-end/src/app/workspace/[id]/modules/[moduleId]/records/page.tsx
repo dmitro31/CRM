@@ -6,8 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { ProtectedRoute } from '@/components/protected-route'
 import { RecordForm } from '@/components/record-form'
-import { Button } from '@/shared/UI/button/button'
-import { Select } from '@/shared/UI/Select'
+import { Button } from '@/shared/UI/Button'
 import { PageHeader } from '@/shared/UI/PageHeader'
 import { EmptyState } from '@/shared/UI/EmptyState'
 import * as metadataApi from '@/lib/metadata-api'
@@ -132,6 +131,7 @@ function RecordsContent() {
       {showCreateForm && (
         <div className="mb-6">
           <RecordForm
+            workspaceId={workspaceId}
             fields={fields}
             onSubmit={handleCreate}
             onCancel={() => setShowCreateForm(false)}
@@ -143,6 +143,7 @@ function RecordsContent() {
       {editingRecord && (
         <div className="mb-6">
           <RecordForm
+            workspaceId={workspaceId}
             fields={fields}
             initialData={editingRecord.data}
             onSubmit={handleUpdate}
@@ -176,6 +177,12 @@ function RecordsContent() {
                     </td>
                   ))}
                   <td className="space-x-3 px-4 py-2.5 text-right">
+                    <Link
+                      href={`/workspace/${workspaceId}/modules/${moduleId}/records/${record.id}`}
+                      className="text-[12.5px] text-[#24493B] hover:underline"
+                    >
+                      Деталі
+                    </Link>
                     <button
                       onClick={() => setEditingRecord(record)}
                       className="text-[12.5px] text-[#24493B] hover:underline"
@@ -188,14 +195,6 @@ function RecordsContent() {
                     >
                       Видалити
                     </button>
-                  </td>
-                  <td>
-                    <Link
-                      href={`/workspace/${workspaceId}/modules/${moduleId}/records/${record.id}`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Деталі
-                    </Link>
                   </td>
                 </tr>
 

@@ -19,7 +19,7 @@ import { PipelineWidget } from '@/components/pipeline-widget'
 import * as metadataApi from '@/lib/metadata-api'
 
 import { ProtectedRoute } from '@/components/protected-route'
-import { Button } from '@/shared/UI/button/button'
+import { Button } from '@/shared/UI/Button'
 import { Input } from '@/shared/UI/Input'
 import { Card } from '@/shared/UI/Card'
 import { EmptyState } from '@/shared/UI/EmptyState'

@@ -5,6 +5,7 @@ import { AuthProvider } from '@/providers/auth-provider'
 import { WorkspaceProvider } from '@/providers/workspace-provider'
 import './globals.css'
 import HeaderWidgets from '@/widgets/Header/Header-widgets'
+import Footer from '@/features/footer/Footer'
 
 // [2] Налаштовуємо шрифт
 const inter = Inter({
@@ -24,6 +25,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <HeaderWidgets />
               </div>
               {children}
+              <Footer/>
             </WorkspaceProvider>
           </AuthProvider>
         </QueryProvider>

@@ -8,6 +8,7 @@ import { DynamicFieldInput } from './dynamic-field-input'
 
 interface RecordFormProps {
   fields: Field[]
+  workspaceId: string
   initialData?: Record<string, unknown>
   onSubmit: (data: Record<string, unknown>) => Promise<void>
   onCancel: () => void
@@ -16,6 +17,7 @@ interface RecordFormProps {
 
 export function RecordForm({
   fields,
+  workspaceId,
   initialData = {},
   onSubmit,
   onCancel,
@@ -79,6 +81,7 @@ export function RecordForm({
           <DynamicFieldInput
             key={field.id}
             field={field}
+            workspaceId={workspaceId}
             value={formData[field.key]}
             onChange={value => handleChange(field.key, value)}
             error={errors[field.key]}

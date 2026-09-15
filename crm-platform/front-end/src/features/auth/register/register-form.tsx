@@ -12,9 +12,10 @@ import {
   type RegisterFormData,
 } from '@/lib/validation/auth-schemas'
 
-import { Button } from '@/shared/UI/button'
-import { FormField } from '@/shared/UI/form-field'
+import { Button } from '@/shared/UI/Button'
+import { FormField } from '@/shared/UI/FormField'
 import { Input } from '@/shared/UI/Input'
+import Logo from '@/features/header/logo'
 
 export function RegisterForm() {
   const [submitted, setSubmitted] = useState(false)
@@ -47,10 +48,10 @@ export function RegisterForm() {
   if (submitted) {
     return (
       <div className="w-full max-w-md">
-        <div className="rounded-3xl border border-gray-200 bg-white p-8 text-center shadow-xl shadow-gray-200/40 sm:p-10">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
+        <div className="rounded-lg border border-[#DFE3DC] bg-white p-8 text-center shadow-sm sm:p-10">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E7EEE9]">
             <svg
-              className="h-8 w-8 text-blue-600"
+              className="h-8 w-8 text-[#24493B]"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -61,18 +62,18 @@ export function RegisterForm() {
             </svg>
           </div>
 
-          <h1 className="text-2xl font-bold tracking-tight text-gray-950">
+          <h1 className="text-2xl font-bold tracking-tight text-[#171A18]">
             Перевір свою пошту
           </h1>
 
-          <p className="mt-3 text-sm leading-6 text-gray-500">
+          <p className="mt-3 text-sm leading-6 text-[#6C716A]">
             Ми надіслали лист для підтвердження email. Перейди за
             посиланням у листі, щоб активувати свій акаунт.
           </p>
 
           <Link
             href="/login"
-            className="mt-7 inline-flex h-11 w-full items-center justify-center rounded-xl bg-gray-950 px-5 text-sm font-semibold text-white transition hover:bg-gray-800"
+            className="mt-7 inline-flex h-11 w-full items-center justify-center rounded-xl bg-[#24493B] px-5 text-sm font-semibold text-white transition hover:bg-[#1B392E]"
           >
             Перейти до входу
           </Link>
@@ -84,15 +85,19 @@ export function RegisterForm() {
   return (
     <div className="w-full max-w-md">
       <div className="mb-8">
-        <p className="mb-2 text-sm font-medium text-blue-600">
+        <div className="mb-4">
+          <Logo />
+        </div>
+
+        <p className="mb-2 text-sm font-medium text-[#24493B]">
           Почнемо
         </p>
 
-        <h1 className="text-3xl font-bold tracking-tight text-gray-950">
+        <h1 className="text-3xl font-bold tracking-tight text-[#171A18]">
           Створіть акаунт
         </h1>
 
-        <p className="mt-2 text-sm leading-6 text-gray-500">
+        <p className="mt-2 text-sm leading-6 text-[#6C716A]">
           Зареєструйтесь, щоб створити свій робочий простір.
         </p>
       </div>
@@ -154,13 +159,14 @@ export function RegisterForm() {
         </FormField>
 
         {serverError && (
-          <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+          <div className="rounded-xl border border-[#F3C6C1] bg-[#FBEDEC] px-4 py-3 text-sm text-[#B3261E]">
             {serverError}
           </div>
         )}
 
         <Button
           type="submit"
+          className="h-11 w-full"
           loading={isSubmitting}
           loadingText="Створення акаунта..."
         >
@@ -169,26 +175,26 @@ export function RegisterForm() {
       </form>
 
       <div className="my-7 flex items-center gap-3">
-        <div className="h-px flex-1 bg-gray-200" />
+        <div className="h-px flex-1 bg-[#DFE3DC]" />
 
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-[#6C716A]">
           або
         </span>
 
-        <div className="h-px flex-1 bg-gray-200" />
+        <div className="h-px flex-1 bg-[#DFE3DC]" />
       </div>
 
-      <p className="text-center text-sm text-gray-500">
+      <p className="text-center text-sm text-[#6C716A]">
         Вже маєте акаунт?{' '}
         <Link
           href="/login"
-          className="font-semibold text-gray-950 transition hover:text-blue-600"
+          className="font-semibold text-[#171A18] transition hover:text-[#24493B]"
         >
           Увійти
         </Link>
       </p>
 
-      <p className="mt-6 text-center text-xs leading-5 text-gray-400">
+      <p className="mt-6 text-center text-xs leading-5 text-[#6C716A]">
         Створюючи акаунт, ви погоджуєтесь з умовами використання
         платформи.
       </p>

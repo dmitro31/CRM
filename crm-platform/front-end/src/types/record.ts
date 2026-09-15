@@ -14,3 +14,9 @@ export interface PaginatedRecords {
   page: number
   limit: number
 }
+export interface RecordFileValue {
+  fileId: string
+  originalName: string
+  mimeType: string
+  size: number
+}

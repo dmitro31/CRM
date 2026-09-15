@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { ArrowRight, Layers, Workflow, Sparkles } from 'lucide-react'
 import { useAuth } from '@/providers/auth-provider'
+import Footer from '@/features/footer/Footer'
+import { Workflow as WorkflowIcon, MessageSquare } from 'lucide-react'
 
 export default function LandingPage() {
 
@@ -58,6 +60,72 @@ export default function LandingPage() {
           />
         </div>
       </section>
+      <section className="mx-auto max-w-3xl px-8 py-20">
+  <h2 className="text-center text-[26px] font-medium text-[#171A18]">
+    Від опису до робочого інструменту за хвилини
+  </h2>
+
+  <div className="mt-12 space-y-10">
+    <Step
+      number="01"
+      title="Опиши, що тобі треба"
+      description={
+        <>
+          &quot;Облік автомобілів клієнтів автосервісу: марка, модель, номер,
+          статус ремонту&quot; — і AI сам підбере поля й типи даних.
+        </>
+      }
+      icon={<Layers size={16} />}
+    />
+    <Step
+      number="02"
+      title="Додай автоматизацію словами"
+      description={
+        <>
+          &quot;Коли статус стає Завершено — надішли клієнту сповіщення&quot;.
+          Жодного коду, лише природна мова.
+        </>
+      }
+      icon={<WorkflowIcon size={16} />}
+    />
+    <Step
+      number="03"
+      title="Питай AI про свої дані"
+      description="Відповіді ґрунтуються на реальних записах твого workspace, а не на вигаданих цифрах."
+      icon={<MessageSquare size={16} />}
+    />
+  </div>
+</section>
+    </div>
+  )
+}
+
+function Step({
+  number,
+  title,
+  description,
+  icon,
+}: {
+  number: string
+  title: string
+  description: React.ReactNode
+  icon: React.ReactNode
+}) {
+  return (
+    <div className="flex gap-5">
+      <div className="flex flex-col items-center">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#E7EEE9] text-[#24493B]">
+          {icon}
+        </span>
+        <span className="mt-2 h-full w-px bg-[#EEF0EB]" />
+      </div>
+      <div className="pb-2">
+        <span className="font-mono text-[11px] text-[#8B9088]">{number}</span>
+        <h3 className="mt-1 text-[15px] font-medium text-[#171A18]">{title}</h3>
+        <p className="mt-1 max-w-md text-[13.5px] leading-relaxed text-[#6C716A]">
+          {description}
+        </p>
+      </div>
     </div>
   )
 }
