@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
 import * as authApi from '@/lib/auth-api'
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
 
@@ -126,5 +126,19 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-5 py-10">
+          <div className="h-7 w-7 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
+        </main>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   )
 }
