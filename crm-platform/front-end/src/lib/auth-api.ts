@@ -51,8 +51,13 @@ export async function fetchMe() {
 }
 
 export async function logout() {
-  await apiClient.post('/auth/logout')
-  setAccessToken(null)
+  try {
+    await apiClient.post('/auth/logout')
+  } catch {
+    // Ігноруємо 403/401 помилки при виході, якщо сесія вже недійсна
+  } finally {
+    setAccessToken(null)
+  }
 }
 
 export async function forgotPassword(email: string) {

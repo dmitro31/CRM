@@ -29,7 +29,7 @@ apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     config.headers.Authorization = `Bearer ${accessToken}`
   }
 
-  if (['post', 'put', 'patch', 'delete'].includes(config.method ?? '')) {
+  if (['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase() ?? '')) {
     const csrfToken = getCsrfTokenFromCookie()
     if (csrfToken) {
       config.headers['X-CSRF-Token'] = csrfToken
@@ -70,6 +70,7 @@ apiClient.interceptors.response.use(
     }
 
     const isRefreshUrl = originalRequest.url?.includes('/auth/refresh')
+    const isLogoutUrl = originalRequest.url?.includes('/auth/logout')
     const status = error.response?.status
 
     if (isRefreshUrl && (status === 401 || status === 403)) {
@@ -81,7 +82,7 @@ apiClient.interceptors.response.use(
       return Promise.reject(error)
     }
 
-    if (status === 401 && !originalRequest._retry && !isRefreshUrl) {
+    if ((status === 401 || status === 403) && !originalRequest._retry && !isRefreshUrl && !isLogoutUrl) {
       originalRequest._retry = true
 
       try {
