@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Patch, UseGuards } from '@nestjs/common'
+import { Controller, Get, Param, Patch, UseGuards, Delete } from '@nestjs/common'
 import type { User } from '@prisma/client'
 
 import { CurrentUser } from 'common/decorators/current-user.decorator'
@@ -9,7 +9,7 @@ import { NotificationService } from './notification.service'
 @UseGuards(JwtAuthGuard)
 @Controller('notifications')
 export class NotificationController {
-  constructor(private readonly notificationService: NotificationService) {}
+  constructor(private readonly notificationService: NotificationService) { }
 
   @Get()
   findAll(@CurrentUser() user: User) {
@@ -29,5 +29,15 @@ export class NotificationController {
   @Patch('read-all')
   markAllAsRead(@CurrentUser() user: User) {
     return this.notificationService.markAllAsRead(user.id)
+  }
+
+  @Delete()
+  clearAll(@CurrentUser() user: User) {
+    return this.notificationService.clearAll(user.id)
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string, @CurrentUser() user: User) {
+    return this.notificationService.remove(id, user.id)
   }
 }

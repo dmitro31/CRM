@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Bell } from 'lucide-react'
+import { Bell, Trash2 } from 'lucide-react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { getAccessToken } from '@/lib/api-client'
@@ -60,6 +60,12 @@ export default function NotificationBell() {
     void queryClient.invalidateQueries({ queryKey: ['notifications'] })
     void queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
   }
+  const handleClearAll = async () => {
+    if (!confirm('Очистити всі сповіщення?')) return
+    await notificationApi.clearAllNotifications()
+    void queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    void queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
+  }
 
   const handleItemClick = async (id: string, isRead: boolean) => {
     if (!isRead) {
@@ -87,18 +93,31 @@ export default function NotificationBell() {
       {isActive && (
         <div className="absolute right-0 top-[calc(100%+6px)] z-50 w-80 origin-top-right overflow-hidden rounded-md border border-[#DFE3DC] bg-white">
           <div className="flex items-center justify-between border-b border-[#EEF0EB] px-3 py-2.5">
-            <span className="text-[13px] font-medium text-[#171A18]">
-              Сповіщення
-            </span>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={() => void handleMarkAllRead()}
-                className="text-[11px] text-[#24493B] hover:underline"
-              >
-                Позначити всі прочитаними
-              </button>
-            )}
+            <div className="flex items-center justify-between border-b border-[#EEF0EB] px-3 py-2.5">
+              <span className="text-[13px] font-medium text-[#171A18]">Сповіщення</span>
+              <div className="flex items-center gap-3">
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => void handleMarkAllRead()}
+                    className="text-[11px] text-[#24493B] hover:underline"
+                  >
+                    Позначити всі прочитаними
+                  </button>
+                )}
+                {notifications.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => void handleClearAll()}
+                    className="flex items-center gap-1 text-[11px] text-[#B3261E] hover:underline"
+                    title="Очистити всі сповіщення"
+                  >
+                    <Trash2 size={12} />
+                    Очистити
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="max-h-80 overflow-y-auto">
@@ -109,31 +128,46 @@ export default function NotificationBell() {
             )}
 
             {notifications.map(notification => (
-              <button
+              <div
                 key={notification.id}
-                type="button"
-                onClick={() => void handleItemClick(notification.id, notification.isRead)}
-                className={`flex w-full gap-2.5 border-b border-[#F1F2EF] px-3 py-2.5 text-left transition-colors last:border-0 hover:bg-[#F6F7F4] ${
-                  notification.isRead ? '' : 'bg-[#F6F7F4]/60'
-                }`}
-              >
-                <span
-                  className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${
-                    notification.isRead ? 'bg-transparent' : TYPE_DOT[notification.type]
+                className={`group flex w-full gap-2.5 border-b border-[#F1F2EF] px-3 py-2.5 last:border-0 hover:bg-[#F6F7F4] ${notification.isRead ? '' : 'bg-[#F6F7F4]/60'
                   }`}
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[12.5px] font-medium text-[#171A18]">
-                    {notification.title}
-                  </p>
-                  <p className="mt-0.5 line-clamp-2 text-[12px] text-[#6C716A]">
-                    {notification.message}
-                  </p>
-                  <p className="mt-1 font-mono text-[10px] text-[#8B9088]">
-                    {timeAgo(notification.createdAt)}
-                  </p>
-                </div>
-              </button>
+              >
+                <button
+                  type="button"
+                  onClick={() => void handleItemClick(notification.id, notification.isRead)}
+                  className="flex min-w-0 flex-1 gap-2.5 text-left"
+                >
+                  <span
+                    className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${notification.isRead ? 'bg-transparent' : TYPE_DOT[notification.type]
+                      }`}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[12.5px] font-medium text-[#171A18]">
+                      {notification.title}
+                    </p>
+                    <p className="mt-0.5 line-clamp-2 text-[12px] text-[#6C716A]">
+                      {notification.message}
+                    </p>
+                    <p className="mt-1 font-mono text-[10px] text-[#8B9088]">
+                      {timeAgo(notification.createdAt)}
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async e => {
+                    e.stopPropagation()
+                    await notificationApi.deleteNotification(notification.id)
+                    void queryClient.invalidateQueries({ queryKey: ['notifications'] })
+                    void queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] })
+                  }}
+                  className="shrink-0 self-start text-[#8B9088] opacity-0 transition hover:text-[#B3261E] group-hover:opacity-100"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
             ))}
           </div>
         </div>

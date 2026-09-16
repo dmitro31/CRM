@@ -44,4 +44,19 @@ export class NotificationService {
   }) {
     return this.prisma.notification.create({ data: payload })
   }
+
+  async remove(notificationId: string, userId: string) {
+    await this.prisma.notification.deleteMany({
+      where: { id: notificationId, userId }
+
+    })
+    return { message: 'Notification deleted' }
+  }
+
+  async clearAll(userId: string) {
+    await this.prisma.notification.deleteMany({
+      where: {userId}
+    })
+    return { message: 'All notification cleared'}
+  }
 }

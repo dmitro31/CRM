@@ -20,3 +20,10 @@ export async function markAsRead(id: string) {
 export async function markAllAsRead() {
   await apiClient.patch('/notifications/read-all')
 }
+export async function deleteNotification(id: string) {
+  await apiClient.delete(`/notifications/${id}`)
+}
+
+export async function clearAllNotifications() {
+  await apiClient.delete('/notifications')
+}
