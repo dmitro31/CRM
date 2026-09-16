@@ -3,6 +3,9 @@ export interface User {
   email: string
   firstName: string
   lastName: string | null
+  phone: string | null
+  avatar: string | null
+  provider: 'LOCAL' | 'GOOGLE' | 'GITHUB'
   isVerified: boolean
   isActive: boolean
 }

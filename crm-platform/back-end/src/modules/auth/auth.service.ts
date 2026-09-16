@@ -15,6 +15,7 @@ import { TokenService } from './services/token.service';
 import { VerificationTokenService } from './services/verification-token.service';
 import { MailService } from '../mail/mail.service';
 import { RefreshTokenService } from './services/refresh-token.service';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class AuthService {
@@ -26,7 +27,7 @@ export class AuthService {
     private readonly mailService: MailService,
     private readonly refreshTokenService: RefreshTokenService,
     private readonly config: ConfigService,
-  ) {}
+  ) { }
 
   async register(dto: RegisterDto) {
     const existingUser = await this.prisma.user.findUnique({
@@ -573,5 +574,17 @@ export class AuthService {
       accessToken,
       refreshToken,
     });
+  }
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        phone: dto.phone,
+      },
+    });
+
+    return this.toUserResponse(user);
   }
 }

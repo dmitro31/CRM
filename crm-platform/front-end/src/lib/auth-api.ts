@@ -70,3 +70,12 @@ export async function resetPassword(token: string, password: string) {
   )
   return data
 }
+
+export async function updateProfile(payload: {
+  firstName?: string
+  lastName?: string
+  phone?: string
+}) {
+  const { data } = await apiClient.patch<User>('/auth/me', payload)
+  return data
+}

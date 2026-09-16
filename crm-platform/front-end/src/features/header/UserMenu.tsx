@@ -44,6 +44,13 @@ export default function UserMenu() {
             <p className="truncate text-[11px] text-[#6C716A]">{user.email}</p>
           </div>
           <Link
+            href="/account"
+            className="flex items-center gap-2 rounded-[6px] px-2.5 py-2 text-[12.5px] text-[#3D423B] transition-colors hover:bg-[#F6F7F4]"
+          >
+            <UserIcon size={14} />
+            Мій акаунт
+          </Link>
+          <Link
             href="/docs"
             className="flex items-center gap-2 rounded-[6px] px-2.5 py-2 text-[12.5px] text-[#3D423B] transition-colors hover:bg-[#F6F7F4]"
           >

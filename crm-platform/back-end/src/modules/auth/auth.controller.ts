@@ -8,9 +8,11 @@ import {
   Post,
   Query,
   UseGuards,
+  Patch
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { randomUUID } from 'crypto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -53,7 +55,7 @@ interface GoogleOAuthProfile extends OAuthProfile {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   private setAuthCookies(res: Response, refreshToken: string) {
     const csrfToken = randomUUID();
@@ -119,6 +121,9 @@ export class AuthController {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      phone: user.phone,
+      avatar: user.avatar,
+      provider: user.provider,
       isVerified: user.isVerified,
       isActive: user.isActive,
     };
@@ -185,7 +190,7 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  googleAuth() {}
+  googleAuth() { }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
@@ -205,7 +210,7 @@ export class AuthController {
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  github() {}
+  github() { }
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
@@ -221,5 +226,10 @@ export class AuthController {
       user: result.user,
       accessToken: result.accessToken,
     };
+  }
+  @UseGuards(JwtAuthGuard)
+  @Patch('me')
+  updateMe(@CurrentUser() user: User, @Body() dto: UpdateProfileDto) {
+    return this.authService.updateProfile(user.id, dto);
   }
 }
