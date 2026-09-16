@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { Search } from 'lucide-react'
 
 import HeaderInput from '@/features/header/HeaderInput'
 import Logo from '@/features/header/logo'
@@ -11,7 +12,6 @@ import { GlobalSearch } from '@/components/global-search'
 
 export default function HeaderWidgets() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
-
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -26,23 +26,39 @@ export default function HeaderWidgets() {
 
   return (
     <>
-      <div className="flex h-16 items-center justify-between border-b border-[#DFE3DC] bg-[#F6F7F4]">
-        <div className="flex items-center">
-          <div className="pl-8 pr-6">
+      <header className="flex h-16 items-center justify-between border-b border-[#DFE3DC] bg-[#F6F7F4] px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-2 sm:gap-4 lg:gap-6 min-w-0">
+          <div className="shrink-0">
             <Logo />
           </div>
-          <WorkspaceDropMenu />
-          <HeaderInput onOpen={() => setIsSearchOpen(true)} />
-          {isSearchOpen && <GlobalSearch onClose={() => setIsSearchOpen(false)} />}
+
+          <div className="hidden sm:block shrink-0">
+            <WorkspaceDropMenu />
+          </div>
+
+          <div className="hidden md:block">
+            <HeaderInput onOpen={() => setIsSearchOpen(true)} />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsSearchOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#DFE3DC] bg-white text-gray-600 transition hover:bg-gray-50 md:hidden"
+            aria-label="Search"
+          >
+            <Search className="h-4 w-4" />
+          </button>
         </div>
 
-        <div className="flex items-center gap-2 pr-8">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           <NotificationBell />
           <UserMenu />
         </div>
-      </div>
+      </header>
 
-      {isSearchOpen && <GlobalSearch />}
+      {isSearchOpen && (
+        <GlobalSearch onClose={() => setIsSearchOpen(false)} />
+      )}
     </>
   )
 }
