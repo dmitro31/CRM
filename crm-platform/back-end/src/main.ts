@@ -15,8 +15,12 @@ async function bootstrap() {
   app.use(cookieParser());
   app.useGlobalFilters(new GlobalExceptionFilter());
 
+  // Парсимо origins з очищенням від зайвих пробілів
+  const allowedOrigins =
+    process.env.CORS_ORIGIN?.split(',').map((origin) => origin.trim()) ?? [];
+
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(',') ?? [],
+    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
     credentials: true,
   });
 
@@ -38,6 +42,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(process.env.PORT ?? 3000);
+  const port = Number(process.env.PORT) || 3000;
+
+  // Обов'язково вказуємо '0.0.0.0' для хостингу Render
+  await app.listen(port, '0.0.0.0');
 }
 void bootstrap();
