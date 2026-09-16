@@ -27,7 +27,6 @@ export default function Footer() {
               title="Ресурси"
               links={[
                 { label: 'Документація', href: '/docs' },
-                { label: 'Підтримка', href: '#' },
               ]}
             />
             <FooterColumn

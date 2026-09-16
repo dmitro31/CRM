@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { Footer } from '@/widgets/footer'
 
 export default function PrivacyPage() {
   return (
@@ -23,7 +22,6 @@ export default function PrivacyPage() {
           </p>
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

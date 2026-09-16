@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Footer } from '@/widgets/footer'
+
 
 export default function AboutPage() {
   return (
@@ -22,7 +22,6 @@ export default function AboutPage() {
           </p>
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

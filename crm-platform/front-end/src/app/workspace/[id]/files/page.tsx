@@ -7,7 +7,7 @@ import { AxiosError } from 'axios'
 
 import { ProtectedRoute } from '@/components/protected-route'
 import { FileIcon } from '@/components/file-icon'
-import { Button } from '@/shared/UI/button/button'
+import { Button } from '@/shared/UI/Button'
 import { Card } from '@/shared/UI/Card'
 import { PageHeader } from '@/shared/UI/PageHeader'
 import { EmptyState } from '@/shared/UI/EmptyState'

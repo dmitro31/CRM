@@ -8,7 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { AxiosError } from 'axios'
 
 import { ProtectedRoute } from '@/components/protected-route'
-import { Button } from '@/shared/UI/button/button'
+import { Button } from '@/shared/UI/Button'
 import { Input } from '@/shared/UI/Input'
 import { Select } from '@/shared/UI/Select'
 import { Card } from '@/shared/UI/Card'
