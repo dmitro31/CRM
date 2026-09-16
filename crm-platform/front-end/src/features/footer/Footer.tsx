@@ -18,7 +18,7 @@ export default function Footer() {
             <FooterColumn
               title="Продукт"
               links={[
-                { label: 'Можливості', href: '#features' },
+                { label: 'Можливості', href: '/features' },
                 { label: 'Увійти', href: '/login' },
                 { label: 'Реєстрація', href: '/register' },
               ]}
@@ -26,15 +26,15 @@ export default function Footer() {
             <FooterColumn
               title="Ресурси"
               links={[
-                { label: 'Документація', href: '#' },
+                { label: 'Документація', href: '/docs' },
                 { label: 'Підтримка', href: '#' },
               ]}
             />
             <FooterColumn
               title="Компанія"
               links={[
-                { label: 'Про нас', href: '#' },
-                { label: 'Контакти', href: '#' },
+                { label: 'Про нас', href: '/about' },
+                { label: 'Контакти', href: '/contact' },
               ]}
             />
           </div>
@@ -43,8 +43,8 @@ export default function Footer() {
         <div className="mt-10 flex flex-col gap-2 border-t border-[#EEF0EB] pt-6 text-[12px] text-[#8B9088] sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} BoostFlow. Усі права захищені.</p>
           <div className="flex gap-4">
-            <Link href="#" className="hover:text-[#3D423B]">Умови використання</Link>
-            <Link href="#" className="hover:text-[#3D423B]">Конфіденційність</Link>
+            <Link href="/terms" className="hover:text-[#3D423B]">Умови використання</Link>
+            <Link href="/privacy" className="hover:text-[#3D423B]">Конфіденційність</Link>
           </div>
         </div>
       </div>

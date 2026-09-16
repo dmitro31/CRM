@@ -53,14 +53,6 @@ export function RecentNotifications() {
           ))}
         </Card>
       )}
-
-      <Link
-        href="#"
-        onClick={e => e.preventDefault()}
-        className="mt-2 inline-block text-[12px] text-[#24493B] hover:underline"
-      >
-        Усі сповіщення
-      </Link>
     </div>
   )
 }
