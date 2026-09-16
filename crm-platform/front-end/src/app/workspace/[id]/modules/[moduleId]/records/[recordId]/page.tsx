@@ -8,13 +8,13 @@ import { ExternalLink, FileText } from 'lucide-react'
 import { ProtectedRoute } from '@/components/protected-route'
 import { RecordTimeline } from '@/components/record-timeline'
 import { RecordComments } from '@/components/record-comments'
-import { Breadcrumb } from '@/shared/UI/Breadcrumb'
 import { Card } from '@/shared/UI/Card'
 import * as metadataApi from '@/lib/metadata-api'
 import * as recordApi from '@/lib/record-api'
 import * as fileApi from '@/lib/file-api'
 import { IMAGE_TYPES } from '@/lib/file-constants'
 import type { RecordFileValue } from '@/types/record'
+import Link from 'next/link'
 
 type Tab = 'timeline' | 'comments'
 
@@ -54,13 +54,9 @@ function RecordDetailContent() {
 
   return (
     <div className="mx-auto max-w-3xl px-8 py-10">
-      <Breadcrumb
-        items={[
-          { label: 'Модулі', href: `/workspace/${workspaceId}/modules` },
-          { label: module_?.name ?? '...', href: `/workspace/${workspaceId}/modules/${moduleId}/records` },
-          { label: `Запис #${recordId.slice(0, 8)}` },
-        ]}
-      />
+      <Link href={`/workspace/${workspaceId}/modules/${moduleId}/records`}>
+        Перейти до записів 
+      </Link>
 
       <h1 className="text-[20px] font-medium text-[#171A18]">{module_?.name}</h1>
       <p className="mt-1 text-[13px] text-[#8B9088]">Запис #{recordId.slice(0, 8)}</p>
