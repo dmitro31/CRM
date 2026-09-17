@@ -187,7 +187,7 @@ export function RegisterForm() {
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          onClick={authApi.redirectToGoogleAuth}
+          onClick={() => window.location.assign('/api/auth/google')}
           className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[#DFE3DC] bg-white px-4 text-sm font-medium text-[#171A18] transition hover:bg-[#F6F7F4]"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -213,7 +213,7 @@ export function RegisterForm() {
 
         <button
           type="button"
-          onClick={authApi.redirectToGithubAuth}
+          onClick={() => window.location.assign('/api/auth/github')}
           className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[#DFE3DC] bg-white px-4 text-sm font-medium text-[#171A18] transition hover:bg-[#F6F7F4]"
         >
           <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">

@@ -75,10 +75,6 @@ export async function resetPassword(token: string, password: string) {
   )
   return data
 }
-export async function resendVerifyEmail(email: string) {
-  const { data } = await apiClient.post('/auth/resend-verify-email', { email })
-  return data
-}
 
 export async function updateProfile(payload: {
   firstName?: string
