@@ -37,7 +37,7 @@ export class MailService {
   async sendVerificationEmail(email: string, firstName: string, token: string) {
     const html = await this.loadTemplate('verify-email.html', {
       name: firstName,
-      url: `${this.appUrl}/auth/verify-email?token=${token}`,
+      url: `${this.appUrl}/verify-email?token=${token}`,
     });
 
     await this.resend.emails.send({
