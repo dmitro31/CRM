@@ -1,144 +1,109 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { AxiosError } from 'axios'
 
 import * as authApi from '@/lib/auth-api'
 
-function VerifyEmailContent() {
+export default function VerifyEmailPage() {
+  const router = useRouter()
   const searchParams = useSearchParams()
-  const token = searchParams.get('token')
 
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
-    'loading',
-  )
+  const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
+  const [message, setMessage] = useState('')
+  const [debugInfo, setDebugInfo] = useState('')
 
   useEffect(() => {
-    if (!token) {
-      setStatus('error')
-      return
+    const verify = async () => {
+      const token = searchParams.get('token')
+      console.log('Token from URL:', token)
+      setDebugInfo(`Token: ${token ? token.slice(0, 20) + '...' : 'відсутній'}`)
+
+      if (!token) {
+        setStatus('error')
+        setMessage('Токен відсутній у посиланні')
+        return
+      }
+
+      try {
+        console.log('Sending verify request...')
+        const result = await authApi.verifyEmail(token)
+        console.log('Verify result:', result)
+        
+        setStatus('success')
+        setMessage('Email успішно підтверджено!')
+        setTimeout(() => router.push('/'), 2000)
+      } catch (err) {
+        console.error('Verify error:', err)
+        
+        let errorMessage = 'Не вдалося підтвердити email'
+        
+        if (err instanceof AxiosError) {
+          console.log('Error response:', err.response?.status, err.response?.data)
+          errorMessage =
+            (err.response?.data as { message?: string })?.message ||
+            `Статус: ${err.response?.status}`
+        }
+
+        setStatus('error')
+        setMessage(errorMessage)
+      }
     }
 
-    authApi
-      .verifyEmail(token)
-      .then(() => setStatus('success'))
-      .catch(() => setStatus('error'))
-  }, [token])
+    void verify()
+  }, [searchParams, router])
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-5 py-10">
-      <div className="w-full max-w-md">
-        <div className="mb-8 flex justify-center">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-950 text-lg font-bold text-white">
-              C
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50">
+      <div className="w-full max-w-sm space-y-4 rounded-lg border bg-white p-8 text-center">
+        {status === 'loading' && (
+          <>
+            <p className="text-lg font-semibold">Підтвердження email...</p>
+            <div className="flex justify-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
             </div>
-
-            <span className="font-bold text-gray-950">
-              CRM Platform
-            </span>
-          </Link>
-        </div>
-
-        <div className="rounded-3xl border border-gray-200 bg-white p-8 text-center shadow-xl shadow-gray-200/40 sm:p-10">
-          {status === 'loading' && (
-            <>
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
-                <div className="h-7 w-7 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
-              </div>
-
-              <h1 className="text-2xl font-bold tracking-tight text-gray-950">
-                Підтверджуємо email
-              </h1>
-
-              <p className="mt-3 text-sm leading-6 text-gray-500">
-                Зачекайте кілька секунд. Ми перевіряємо ваше посилання.
+            {debugInfo && (
+              <p className="mt-4 rounded bg-gray-100 p-2 font-mono text-xs text-gray-600">
+                {debugInfo}
               </p>
-            </>
-          )}
+            )}
+          </>
+        )}
 
-          {status === 'success' && (
-            <>
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-50">
-                <svg
-                  className="h-8 w-8 text-emerald-600"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                >
-                  <path d="m5 12 4 4L19 6" />
-                </svg>
+        {status === 'success' && (
+          <>
+            <p className="text-lg font-semibold text-green-600">✓ {message}</p>
+            <p className="text-sm text-gray-500">Перенаправляю на головну сторінку...</p>
+          </>
+        )}
+
+        {status === 'error' && (
+          <>
+            <p className="text-lg font-semibold text-red-600">✗ Помилка</p>
+            <p className="text-sm text-gray-600">{message}</p>
+            {debugInfo && (
+              <div className="mt-4 rounded bg-gray-100 p-2">
+                <p className="text-xs font-mono text-gray-700">{debugInfo}</p>
               </div>
-
-              <h1 className="text-2xl font-bold tracking-tight text-gray-950">
-                Email підтверджено
-              </h1>
-
-              <p className="mt-3 text-sm leading-6 text-gray-500">
-                Ваш акаунт успішно підтверджено. Тепер можна увійти та
-                почати працювати.
-              </p>
-
-              <Link
-                href="/login"
-                className="mt-7 inline-flex h-12 w-full items-center justify-center rounded-xl bg-gray-950 px-5 text-sm font-semibold text-white transition hover:bg-gray-800"
+            )}
+            <div className="space-y-2 pt-4">
+              <button
+                onClick={() => router.push('/login')}
+                className="w-full rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
               >
-                Перейти до входу
-              </Link>
-            </>
-          )}
-
-          {status === 'error' && (
-            <>
-              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-50">
-                <svg
-                  className="h-8 w-8 text-red-600"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M12 9v4" />
-                  <path d="M12 17h.01" />
-                  <path d="M10.3 3.5 2.7 17a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 3.5a2 2 0 0 0-3.4 0Z" />
-                </svg>
-              </div>
-
-              <h1 className="text-2xl font-bold tracking-tight text-gray-950">
-                Не вдалося підтвердити email
-              </h1>
-
-              <p className="mt-3 text-sm leading-6 text-gray-500">
-                Посилання недійсне або протерміноване. Спробуйте отримати
-                новий лист підтвердження.
-              </p>
-
-              <Link
-                href="/login"
-                className="mt-7 inline-flex h-12 w-full items-center justify-center rounded-xl bg-gray-950 px-5 text-sm font-semibold text-white transition hover:bg-gray-800"
+                На сторінку входу
+              </button>
+              <button
+                onClick={() => router.push('/register')}
+                className="w-full rounded border px-4 py-2 text-gray-700 hover:bg-gray-50"
               >
-                Повернутися до входу
-              </Link>
-            </>
-          )}
-        </div>
+                Повторно реєструватись
+              </button>
+            </div>
+          </>
+        )}
       </div>
-    </main>
-  )
-}
-
-export default function VerifyEmailPage() {
-  return (
-    <Suspense
-      fallback={
-        <main className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-5 py-10">
-          <div className="h-7 w-7 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
-        </main>
-      }
-    >
-      <VerifyEmailContent />
-    </Suspense>
+    </div>
   )
 }
