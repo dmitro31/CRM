@@ -112,6 +112,10 @@ export class AuthController {
   verifyEmail(@Query('token') token: string) {
     return this.authService.verifyEmail(token);
   }
+  @Post('resend-verify-email')
+resendVerifyEmail(@Body() dto: { email: string }) {
+  return this.authService.resendVerifyEmail(dto.email)
+}
 
   @UseGuards(JwtAuthGuard)
   @Get('me')

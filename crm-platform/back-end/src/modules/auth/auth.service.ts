@@ -170,6 +170,24 @@ export class AuthService {
     };
   }
 
+  async resendVerifyEmail(email: string) {
+  const user = await this.prisma.user.findUnique({ where: { email } })
+
+  if (!user) {
+    throw new BadRequestException('User not found')
+  }
+
+  if (user.isVerified) {
+    throw new BadRequestException('Email already verified')
+  }
+
+  const token =
+    await this.verificationTokenService.createEmailVerificationToken(user.id)
+  await this.mailService.sendVerificationEmail(user.email, user.firstName, token)
+
+  return { message: 'Verification email sent' }
+}
+
   async resendVerificationEmail(email: string) {
     const user = await this.prisma.user.findUnique({
       where: {
