@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { setAccessToken } from '@/lib/api-client'
 
-export default function OAuthSuccessPage() {
+function OAuthSuccessContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -22,5 +22,19 @@ export default function OAuthSuccessPage() {
     <div className="flex h-screen items-center justify-center">
       <p className="text-gray-500">Авторизація...</p>
     </div>
+  )
+}
+
+export default function OAuthSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center">
+          <p className="text-gray-500">Завантаження...</p>
+        </div>
+      }
+    >
+      <OAuthSuccessContent />
+    </Suspense>
   )
 }
