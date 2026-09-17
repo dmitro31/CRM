@@ -26,17 +26,17 @@ export default function HeaderWidgets() {
 
   return (
     <>
-      <header className="flex h-16 w-full items-center justify-between border-b border-[#DFE3DC] bg-[#F6F7F4] px-3 sm:px-6">
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+      <header className="flex h-16 w-full items-center justify-between border-b border-[#DFE3DC] bg-[#F6F7F4] px-2 sm:px-6 gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-4 min-w-0 flex-1">
           <div className="shrink-0">
             <Logo />
           </div>
 
-          <div className="shrink-0 max-w-[130px] sm:max-w-none">
+          <div className="shrink min-w-0 max-w-[120px] xs:max-w-[160px] sm:max-w-none">
             <WorkspaceDropMenu />
           </div>
 
-          <div className="hidden lg:block">
+          <div className="hidden lg:block w-full max-w-xs xl:max-w-md">
             <HeaderInput onOpen={() => setIsSearchOpen(true)} />
           </div>
 
@@ -50,7 +50,7 @@ export default function HeaderWidgets() {
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
           <NotificationBell />
           <UserMenu />
         </div>

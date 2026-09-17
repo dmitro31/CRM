@@ -88,3 +88,12 @@ export async function updateProfile(payload: {
   const { data } = await apiClient.patch<User>('/auth/me', payload)
   return data
 }
+const API_BASE_URL = 'https://www.crm-platform.site/';
+
+export function redirectToGoogleAuth() {
+  window.location.href = `${API_BASE_URL}/auth/google`;
+}
+
+export function redirectToGithubAuth() {
+  window.location.href = `${API_BASE_URL}/auth/github`;
+}

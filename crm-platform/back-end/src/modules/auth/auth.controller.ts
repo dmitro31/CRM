@@ -113,9 +113,9 @@ export class AuthController {
     return this.authService.verifyEmail(token);
   }
   @Post('resend-verify-email')
-resendVerifyEmail(@Body() dto: { email: string }) {
-  return this.authService.resendVerifyEmail(dto.email)
-}
+  resendVerifyEmail(@Body() dto: { email: string }) {
+    return this.authService.resendVerifyEmail(dto.email)
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
@@ -200,16 +200,13 @@ resendVerifyEmail(@Body() dto: { email: string }) {
   @UseGuards(AuthGuard('google'))
   async googleCallback(
     @Req() req: Request & { user: GoogleOAuthProfile },
-    @Res({ passthrough: true }) res: Response,
+    @Res() res: Response,
   ) {
     const result = await this.authService.googleLogin(req.user);
-
     this.setAuthCookies(res, result.refreshToken);
 
-    return {
-      user: result.user,
-      accessToken: result.accessToken,
-    };
+    const frontendUrl = process.env.APP_URL;
+    return res.redirect(`${frontendUrl}/oauth-success?token=${result.accessToken}`);
   }
 
   @Get('github')
@@ -220,16 +217,13 @@ resendVerifyEmail(@Body() dto: { email: string }) {
   @UseGuards(AuthGuard('github'))
   async githubCallback(
     @Req() req: Request & { user: GithubOAuthProfile },
-    @Res({ passthrough: true }) res: Response,
+    @Res() res: Response,
   ) {
     const result = await this.authService.githubLogin(req.user);
-
     this.setAuthCookies(res, result.refreshToken);
 
-    return {
-      user: result.user,
-      accessToken: result.accessToken,
-    };
+    const frontendUrl = process.env.APP_URL;
+    return res.redirect(`${frontendUrl}/oauth-success?token=${result.accessToken}`);
   }
   @UseGuards(JwtAuthGuard)
   @Patch('me')

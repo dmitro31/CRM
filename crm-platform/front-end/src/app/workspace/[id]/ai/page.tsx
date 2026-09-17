@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { AxiosError } from 'axios'
+import { MessageSquare, X, Plus, Menu } from 'lucide-react'
 
 import { ProtectedRoute } from '@/components/protected-route'
 import * as aiApi from '@/lib/ai-api'
@@ -30,6 +31,8 @@ function AiAssistantContent() {
   const [question, setQuestion] = useState('')
   const [isAsking, setIsAsking] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -67,6 +70,7 @@ function AiAssistantContent() {
     setSelectedConversationId(null)
     setMessages([])
     setError(null)
+    setIsSidebarOpen(false)
     textareaRef.current?.focus()
   }
 
@@ -124,14 +128,32 @@ function AiAssistantContent() {
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-4rem)] max-w-5xl gap-4 p-8">
-      <aside className="flex w-64 shrink-0 flex-col rounded-lg border bg-white">
-        <div className="border-b p-3">
+    <div className="relative mx-auto flex h-[calc(100vh-4rem)] max-w-5xl gap-4 p-3 sm:p-6 lg:p-8">
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 z-20 bg-black/40 md:hidden"
+        />
+      )}
+
+      <aside
+        className={`fixed inset-y-0 left-0 z-30 flex w-72 flex-col border-r bg-white transition-transform duration-300 md:static md:w-64 md:shrink-0 md:translate-x-0 md:rounded-lg md:border ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="flex items-center justify-between border-b p-3">
           <button
             onClick={handleNewChat}
-            className="w-full rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="flex flex-1 items-center justify-center gap-2 rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
           >
-            + Нова розмова
+            <Plus className="h-4 w-4" />
+            Нова розмова
+          </button>
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="ml-2 rounded p-1 text-gray-500 hover:bg-gray-100 md:hidden"
+          >
+            <X className="h-5 w-5" />
           </button>
         </div>
 
@@ -155,7 +177,10 @@ function AiAssistantContent() {
                 }`}
               >
                 <button
-                  onClick={() => setSelectedConversationId(conversation.id)}
+                  onClick={() => {
+                    setSelectedConversationId(conversation.id)
+                    setIsSidebarOpen(false)
+                  }}
                   className="flex-1 truncate text-left"
                   title={conversation.title}
                 >
@@ -163,7 +188,7 @@ function AiAssistantContent() {
                 </button>
                 <button
                   onClick={() => void handleDeleteConversation(conversation.id)}
-                  className="ml-2 shrink-0 text-gray-300 opacity-0 hover:text-red-600 group-hover:opacity-100"
+                  className="ml-2 shrink-0 text-gray-300 hover:text-red-600 md:opacity-0 md:group-hover:opacity-100"
                   title="Видалити"
                 >
                   ✕
@@ -174,25 +199,43 @@ function AiAssistantContent() {
         </div>
       </aside>
 
-      <div className="flex flex-1 flex-col">
-        <h1 className="mb-4 text-2xl font-semibold">AI Асистент</h1>
+      <div className="flex flex-1 flex-col min-w-0">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded border bg-white text-gray-600 hover:bg-gray-50 md:hidden"
+              aria-label="Open history"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <h1 className="text-xl sm:text-2xl font-semibold truncate">AI Асистент</h1>
+          </div>
+          <button
+            onClick={handleNewChat}
+            className="flex items-center gap-1 rounded bg-blue-50 px-2.5 py-1.5 text-xs sm:text-sm font-medium text-blue-600 hover:bg-blue-100 md:hidden"
+          >
+            <Plus className="h-4 w-4" />
+            Новий чат
+          </button>
+        </div>
 
-        <div className="flex-1 space-y-3 overflow-y-auto rounded-lg border bg-white p-4">
+        <div className="flex-1 space-y-3 overflow-y-auto rounded-lg border bg-white p-3 sm:p-4">
           {messages.length === 0 && !isLoadingMessages && (
-            <p className="text-gray-400">
+            <p className="text-xs sm:text-sm text-gray-400">
               Запитай про дані свого workspace, наприклад: &quot;скільки записів у
               статусі Новий?&quot;
             </p>
           )}
 
           {isLoadingMessages && (
-            <p className="text-gray-400">Завантаження розмови...</p>
+            <p className="text-xs sm:text-sm text-gray-400">Завантаження розмови...</p>
           )}
 
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`max-w-[80%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${
+              className={`max-w-[85%] sm:max-w-[80%] whitespace-pre-wrap rounded-lg px-3 py-2 text-xs sm:text-sm ${
                 message.role === 'user'
                   ? 'ml-auto bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-900'
@@ -203,7 +246,7 @@ function AiAssistantContent() {
           ))}
 
           {isAsking && (
-            <div className="max-w-[80%] rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-500">
+            <div className="max-w-[80%] rounded-lg bg-gray-100 px-3 py-2 text-xs sm:text-sm text-gray-500">
               Думаю...
             </div>
           )}
@@ -211,22 +254,22 @@ function AiAssistantContent() {
           <div ref={bottomRef} />
         </div>
 
-        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+        {error && <p className="mt-2 text-xs sm:text-sm text-red-600">{error}</p>}
 
-        <div className="mt-4 flex gap-2">
+        <div className="mt-3 sm:mt-4 flex gap-2">
           <textarea
             ref={textareaRef}
             value={question}
             onChange={e => setQuestion(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Напиши питання... (Enter — надіслати, Shift+Enter — новий рядок)"
+            placeholder="Напиши питання..."
             rows={2}
-            className="flex-1 resize-none rounded border px-3 py-2"
+            className="flex-1 resize-none rounded border px-2.5 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             onClick={() => void handleAsk()}
             disabled={isAsking || !question.trim()}
-            className="self-end rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="self-end rounded bg-blue-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
           >
             Надіслати
           </button>
