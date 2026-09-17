@@ -1,9 +1,9 @@
 import { registerAs } from '@nestjs/config';
 
-const backendUrl = 'https://crm-gr3n.onrender.com'
+const backendUrl = 'https://www.crm-platform.site'
 export const googleConfig = registerAs('google', () => ({
 
   clientId: process.env.GOOGLE_CLIENT_ID!,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  callbackUrl: `${backendUrl}/auth/google/callback`,
+  callbackUrl: `${backendUrl}/api/auth/google/callback`,
 }));
