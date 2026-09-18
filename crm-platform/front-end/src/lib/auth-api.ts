@@ -85,7 +85,7 @@ export async function updateProfile(payload: {
   return data
 }
 // ✅ ПРАВИЛЬНО:
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://crm-gr3n.onrender.com/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://crm-gr3n.onrender.com';
 
 export function redirectToGoogleAuth() {
   window.location.href = `${API_URL}/auth/google`;
