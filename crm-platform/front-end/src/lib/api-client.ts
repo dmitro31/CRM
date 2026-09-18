@@ -72,16 +72,6 @@ apiClient.interceptors.response.use(
     const isRefreshUrl = originalRequest.url?.includes('/auth/refresh')
     const isLogoutUrl = originalRequest.url?.includes('/auth/logout')
     const status = error.response?.status
-
-    if (isRefreshUrl && (status === 401 || status === 403)) {
-      setAccessToken(null)
-      refreshPromise = null
-      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-        window.location.href = '/login'
-      }
-      return Promise.reject(error)
-    }
-
     if ((status === 401 || status === 403) && !originalRequest._retry && !isRefreshUrl && !isLogoutUrl) {
       originalRequest._retry = true
 
