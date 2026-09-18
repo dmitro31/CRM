@@ -61,17 +61,19 @@ export class AuthController {
     const csrfToken = randomUUID();
     const isProduction = process.env.NODE_ENV === 'production';
 
+    // sameSite: 'none' обов'язковий для cross-domain (Vercel ↔ Render),
+    // інакше браузер ніколи не надішле cookie назад
     res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
       httpOnly: true,
       secure: isProduction,
-      sameSite: 'strict',
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: REFRESH_COOKIE_MAX_AGE,
     });
 
     res.cookie(CSRF_COOKIE_NAME, csrfToken, {
       httpOnly: false,
       secure: isProduction,
-      sameSite: 'strict',
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: REFRESH_COOKIE_MAX_AGE,
     });
   }
@@ -202,11 +204,18 @@ export class AuthController {
     @Req() req: Request & { user: GoogleOAuthProfile },
     @Res() res: Response,
   ) {
-    const result = await this.authService.googleLogin(req.user);
-    this.setAuthCookies(res, result.refreshToken);
+    try {
+      const result = await this.authService.googleLogin(req.user);
+      this.setAuthCookies(res, result.refreshToken);
 
-    const frontendUrl = process.env.APP_URL;
-    return res.redirect(`${frontendUrl}/oauth-success?token=${result.accessToken}`);
+      const frontendUrl = process.env.APP_URL;
+      return res.redirect(
+        `${frontendUrl}/oauth-success?token=${encodeURIComponent(result.accessToken)}`,
+      );
+    } catch {
+      const frontendUrl = process.env.APP_URL;
+      return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
+    }
   }
 
   @Get('github')
@@ -219,15 +228,24 @@ export class AuthController {
     @Req() req: Request & { user: GithubOAuthProfile },
     @Res() res: Response,
   ) {
-    const result = await this.authService.githubLogin(req.user);
-    this.setAuthCookies(res, result.refreshToken);
+    try {
+      const result = await this.authService.githubLogin(req.user);
+      this.setAuthCookies(res, result.refreshToken);
 
-    const frontendUrl = process.env.APP_URL;
-    return res.redirect(`${frontendUrl}/oauth-success?token=${result.accessToken}`);
+      const frontendUrl = process.env.APP_URL;
+      return res.redirect(
+        `${frontendUrl}/oauth-success?token=${encodeURIComponent(result.accessToken)}`,
+      );
+    } catch {
+      const frontendUrl = process.env.APP_URL;
+      return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
+    }
   }
+  
   @UseGuards(JwtAuthGuard)
   @Patch('me')
   updateMe(@CurrentUser() user: User, @Body() dto: UpdateProfileDto) {
     return this.authService.updateProfile(user.id, dto);
   }
+
 }

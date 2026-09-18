@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter , useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -17,6 +17,7 @@ import Logo from '@/features/header/logo'
 export default function LoginPage() {
   const { login } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [serverError, setServerError] = useState<string | null>(null)
 
   const {
@@ -38,6 +39,12 @@ export default function LoginPage() {
       setServerError(message ?? 'Не вдалося увійти. Спробуйте ще раз.')
     }
   }
+
+  useEffect(() => {
+    if (searchParams.get('error') === 'oauth_failed') {
+      setServerError('Не вдалося увійти через провайдера. Спробуй ще раз або використай email.')
+    }
+  }, [searchParams])
 
   return (
     <main className="min-h-screen bg-[#F6F7F4]">

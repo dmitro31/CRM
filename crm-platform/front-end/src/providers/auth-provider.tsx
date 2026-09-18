@@ -4,15 +4,16 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import type { User } from '@/types/auth'
+import { setAccessToken } from '@/lib/api-client'
 import * as authApi from '@/lib/auth-api'
 
 interface AuthContextValue {
   user: User | null
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
+  loginWithToken: (token: string) => Promise<void>
   logout: () => Promise<void>
   refetchUser: () => Promise<void>
-  isAuth: boolean
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -58,16 +59,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(result.user)
   }
 
+  // Для OAuth: токен вже отримано з redirect-параметра,
+  // просто зберігаємо його і одразу підвантажуємо користувача —
+  // без цього ProtectedRoute бачить user === null і кидає на /login
+  const loginWithToken = async (token: string) => {
+    setAccessToken(token)
+    const currentUser = await authApi.fetchMe()
+    setUser(currentUser)
+  }
+
   const logout = async () => {
     await authApi.logout()
     setUser(null)
     router.push('/login')
   }
 
-  const isAuth = user  !== null
-
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, refetchUser , isAuth }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, login, loginWithToken, logout, refetchUser }}
+    >
       {children}
     </AuthContext.Provider>
   )
