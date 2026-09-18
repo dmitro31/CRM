@@ -30,7 +30,8 @@ function LoginFormContent() {
     setServerError(null)
     try {
       await login(data.email, data.password)
-      router.push('/dashboard')
+      const redirectUrl = searchParams.get('redirect') || '/dashboard'
+      router.push(redirectUrl)
     } catch (err) {
       const message =
         err instanceof AxiosError

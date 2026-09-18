@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, use } from 'react'
+import { useEffect, useState, use, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { AxiosError } from 'axios'
@@ -19,7 +19,23 @@ export default function InvitationPage({ params }: { params: Promise<{ token: st
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isAccepting, setIsAccepting] = useState(false)
-  const [acceptError, setAcceptError] = useState<string | null>(null)
+
+  const handleAccept = useCallback(async () => {
+    setIsAccepting(true)
+    setError(null)
+
+    try {
+      const workspace = await acceptInvitation(token)
+      router.push(`/workspaces/${workspace.id}`)
+    } catch (err) {
+      const message =
+        err instanceof AxiosError
+          ? (err.response?.data as { message?: string })?.message
+          : undefined
+      setError(message ?? 'Не вдалося прийняти запрошення.')
+      setIsAccepting(false)
+    }
+  }, [token, router])
 
   useEffect(() => {
     async function loadPreview() {
@@ -40,23 +56,13 @@ export default function InvitationPage({ params }: { params: Promise<{ token: st
     loadPreview()
   }, [token])
 
-  const handleAccept = async () => {
-    setIsAccepting(true)
-    setAcceptError(null)
-
-    try {
-      const workspace = await acceptInvitation(token)
-      router.push(`/workspaces/${workspace.id}`)
-    } catch (err) {
-      const message =
-        err instanceof AxiosError
-          ? (err.response?.data as { message?: string })?.message
-          : undefined
-      setAcceptError(message ?? 'Не вдалося прийняти запрошення. Спробуйте ще раз.')
-    } finally {
-      setIsAccepting(false)
+  useEffect(() => {
+    if (!isLoading && !isAuthLoading && user && preview && !isAccepting && !error) {
+      if (user.email.toLowerCase() === preview.email.toLowerCase()) {
+        handleAccept()
+      }
     }
-  }
+  }, [isLoading, isAuthLoading, user, preview, isAccepting, error, handleAccept])
 
   const isEmailMismatch =
     user && preview && user.email.toLowerCase() !== preview.email.toLowerCase()
@@ -96,8 +102,10 @@ export default function InvitationPage({ params }: { params: Promise<{ token: st
               <Logo />
             </div>
 
-            {isLoading || isAuthLoading ? (
-              <div className="text-center text-sm text-[#6C716A]">Завантаження запрошення...</div>
+            {isLoading || isAuthLoading || isAccepting ? (
+              <div className="text-center text-sm text-[#6C716A]">
+                {isAccepting ? 'Приєднання до робочого простору...' : 'Завантаження запрошення...'}
+              </div>
             ) : error ? (
               <div className="space-y-4">
                 <h1 className="text-[24px] font-medium tracking-tight text-[#171A18]">
@@ -150,12 +158,6 @@ export default function InvitationPage({ params }: { params: Promise<{ token: st
                     </div>
                   </div>
 
-                  {acceptError && (
-                    <div className="mt-4 rounded-md border border-[#F3C6C1] bg-[#FBEDEC] px-3.5 py-2.5 text-[13px] text-[#B3261E]">
-                      {acceptError}
-                    </div>
-                  )}
-
                   {!user ? (
                     <div className="mt-6 space-y-3">
                       <p className="text-center text-[13px] text-[#6C716A]">
@@ -192,7 +194,7 @@ export default function InvitationPage({ params }: { params: Promise<{ token: st
                         type="button"
                         onClick={handleAccept}
                         loading={isAccepting}
-                        loadingText="Прийняття..."
+                        loadingText="Приєднання..."
                         className="h-11 w-full"
                       >
                         Прийняти запрошення
