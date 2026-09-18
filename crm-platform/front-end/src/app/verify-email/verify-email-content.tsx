@@ -57,7 +57,7 @@ export function VerifyEmailContent() {
     setMessage('')
 
     try {
-      await authApi.resendVerifyEmail(email)
+      await authApi.resendVerification(email)
       setStatus('resend')
       setMessage('Новий верифікаційний лист надіслано на ваш email')
     } catch (err) {
