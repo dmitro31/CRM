@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter , useSearchParams } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -14,7 +14,7 @@ import { Input } from '@/shared/UI/Input'
 import { FormField } from '@/shared/UI/FormField'
 import Logo from '@/features/header/logo'
 
-export default function LoginPage() {
+function LoginFormContent() {
   const { login } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -46,6 +46,48 @@ export default function LoginPage() {
     }
   }, [searchParams])
 
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="mt-7 space-y-4">
+      <FormField label="Email" error={errors.email?.message}>
+        <Input
+          type="email"
+          {...register('email')}
+          placeholder="you@example.com"
+          autoComplete="email"
+          error={!!errors.email}
+        />
+      </FormField>
+
+      <div>
+        <div className="mb-1.5 flex items-center justify-between">
+          <label className="text-[13px] font-medium text-[#171A18]">Пароль</label>
+          <Link href="/forgot-password" className="text-[12px] font-medium text-[#24493B] hover:underline">
+            Забули пароль?
+          </Link>
+        </div>
+        <Input
+          type="password"
+          {...register('password')}
+          placeholder="••••••••"
+          autoComplete="current-password"
+          error={errors.password?.message}
+        />
+      </div>
+
+      {serverError && (
+        <div className="rounded-md border border-[#F3C6C1] bg-[#FBEDEC] px-3.5 py-2.5 text-[13px] text-[#B3261E]">
+          {serverError}
+        </div>
+      )}
+
+      <Button type="submit" loading={isSubmitting} loadingText="Вхід..." className="h-11 w-full">
+        Увійти
+      </Button>
+    </form>
+  )
+}
+
+export default function LoginPage() {
   return (
     <main className="min-h-screen bg-[#F6F7F4]">
       <div className="grid min-h-screen lg:grid-cols-[1fr_480px]">
@@ -89,43 +131,9 @@ export default function LoginPage() {
               Введи свої дані, щоб продовжити роботу.
             </p>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="mt-7 space-y-4">
-              <FormField label="Email" error={errors.email?.message}>
-                <Input
-                  type="email"
-                  {...register('email')}
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  error={!!errors.email}
-                />
-              </FormField>
-
-              <div>
-                <div className="mb-1.5 flex items-center justify-between">
-                  <label className="text-[13px] font-medium text-[#171A18]">Пароль</label>
-                  <Link href="/forgot-password" className="text-[12px] font-medium text-[#24493B] hover:underline">
-                    Забули пароль?
-                  </Link>
-                </div>
-                <Input
-                  type="password"
-                  {...register('password')}
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  error={errors.password?.message}
-                />
-              </div>
-
-              {serverError && (
-                <div className="rounded-md border border-[#F3C6C1] bg-[#FBEDEC] px-3.5 py-2.5 text-[13px] text-[#B3261E]">
-                  {serverError}
-                </div>
-              )}
-
-              <Button type="submit" loading={isSubmitting} loadingText="Вхід..." className="h-11 w-full">
-                Увійти
-              </Button>
-            </form>
+            <Suspense fallback={<div className="mt-7 text-center text-sm text-[#6C716A]">Завантаження...</div>}>
+              <LoginFormContent />
+            </Suspense>
 
             <div className="my-6 flex items-center gap-3">
               <div className="h-px flex-1 bg-[#DFE3DC]" />
