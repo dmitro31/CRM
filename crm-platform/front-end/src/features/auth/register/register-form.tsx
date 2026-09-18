@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AxiosError } from 'axios'
 
+
 import * as authApi from '@/lib/auth-api'
 import {
   registerSchema,
@@ -187,7 +188,7 @@ export function RegisterForm() {
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          onClick={() => window.location.assign('/api/auth/google')}
+          onClick={() => authApi.redirectToGoogleAuth()}
           className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[#DFE3DC] bg-white px-4 text-sm font-medium text-[#171A18] transition hover:bg-[#F6F7F4]"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -213,7 +214,7 @@ export function RegisterForm() {
 
         <button
           type="button"
-          onClick={() => window.location.assign('/api/auth/github')}
+          onClick={() => authApi.redirectToGithubAuth()}
           className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[#DFE3DC] bg-white px-4 text-sm font-medium text-[#171A18] transition hover:bg-[#F6F7F4]"
         >
           <svg className="h-5 w-5 fill-current" viewBox="0 0 24 24">
