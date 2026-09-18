@@ -9,6 +9,7 @@ import * as authApi from '@/lib/auth-api'
 
 interface AuthContextValue {
   user: User | null
+  isAuth: boolean
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
   loginWithToken: (token: string) => Promise<void>
@@ -74,9 +75,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login')
   }
 
+  const isAuth = user !== null
+
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, loginWithToken, logout, refetchUser }}
+      value={{ user, isLoading, isAuth, login, loginWithToken, logout, refetchUser }}
     >
       {children}
     </AuthContext.Provider>
