@@ -43,10 +43,11 @@ let refreshPromise: Promise<string> | null = null
 
 async function refreshAccessToken(): Promise<string> {
   const csrfToken = getCsrfTokenFromCookie()
+  const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null
 
   const response = await axios.post(
     `${API_URL}/auth/refresh`,
-    {},
+    { refreshToken: storedRefreshToken },
     {
       withCredentials: true,
       headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
@@ -54,7 +55,13 @@ async function refreshAccessToken(): Promise<string> {
   )
 
   const newToken = response.data.accessToken as string
+  const newRefreshToken = response.data.refreshToken as string | undefined
+
   setAccessToken(newToken)
+  if (newRefreshToken && typeof window !== 'undefined') {
+    localStorage.setItem('refreshToken', newRefreshToken)
+  }
+
   return newToken
 }
 
@@ -72,7 +79,8 @@ apiClient.interceptors.response.use(
     const isRefreshUrl = originalRequest.url?.includes('/auth/refresh')
     const isLogoutUrl = originalRequest.url?.includes('/auth/logout')
     const status = error.response?.status
-    if ((status === 401 || status === 403) && !originalRequest._retry && !isRefreshUrl && !isLogoutUrl) {
+
+    if (status === 401 && !originalRequest._retry && !isRefreshUrl && !isLogoutUrl) {
       originalRequest._retry = true
 
       try {
@@ -87,8 +95,11 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest)
       } catch (refreshError) {
         setAccessToken(null)
-        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-          window.location.href = '/login'
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('refreshToken')
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login'
+          }
         }
         return Promise.reject(refreshError)
       }

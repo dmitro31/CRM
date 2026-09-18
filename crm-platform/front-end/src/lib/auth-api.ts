@@ -1,12 +1,17 @@
 import { apiClient, setAccessToken } from './api-client'
 import type { LoginResponse, RefreshResponse, User } from '@/types/auth'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://crm-gr3n.onrender.com'
+
 export async function login(email: string, password: string) {
-  const { data } = await apiClient.post<LoginResponse>('/auth/login', {
+  const { data } = await apiClient.post<LoginResponse & { refreshToken?: string }>('/auth/login', {
     email,
     password,
   })
   setAccessToken(data.accessToken)
+  if (data.refreshToken && typeof window !== 'undefined') {
+    localStorage.setItem('refreshToken', data.refreshToken)
+  }
   return data
 }
 
@@ -40,8 +45,14 @@ export async function resendVerification(email: string) {
 }
 
 export async function refresh() {
-  const { data } = await apiClient.post<RefreshResponse>('/auth/refresh')
+  const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null
+  const { data } = await apiClient.post<RefreshResponse & { refreshToken?: string }>('/auth/refresh', {
+    refreshToken: storedRefreshToken,
+  })
   setAccessToken(data.accessToken)
+  if (data.refreshToken && typeof window !== 'undefined') {
+    localStorage.setItem('refreshToken', data.refreshToken)
+  }
   return data
 }
 
@@ -52,11 +63,14 @@ export async function fetchMe() {
 
 export async function logout() {
   try {
-    await apiClient.post('/auth/logout')
+    const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null
+    await apiClient.post('/auth/logout', { refreshToken: storedRefreshToken })
   } catch {
-    // Ігноруємо 403/401 помилки при виході, якщо сесія вже недійсна
   } finally {
     setAccessToken(null)
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('refreshToken')
+    }
   }
 }
 
@@ -84,8 +98,6 @@ export async function updateProfile(payload: {
   const { data } = await apiClient.patch<User>('/auth/me', payload)
   return data
 }
-// ✅ ПРАВИЛЬНО:
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://crm-gr3n.onrender.com'
 
 export function redirectToGoogleAuth() {
   window.location.href = `${API_URL}/auth/google`
