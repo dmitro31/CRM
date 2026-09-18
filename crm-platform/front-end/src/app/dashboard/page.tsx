@@ -424,19 +424,6 @@ function WorkspaceOverview({
               </div>
 
               <div>
-                <div className="mb-3 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-[15px] font-medium text-[#171A18]">
-                      Сповіщення
-                    </h2>
-                    <p className="mt-0.5 text-[11px] text-[#8B9088]">
-                      Останні події
-                    </p>
-                  </div>
-
-                  <Bell size={15} className="text-[#8B9088]" />
-                </div>
-
                 <RecentNotifications />
               </div>
             </div>
