@@ -8,17 +8,17 @@ import { GenerateFormDto } from './dto/generate-form.dto';
 import { CreateFormFromDraftDto } from './dto/create-form-from-draft.dto';
 
 const FORM_SCHEMA = {
-  type: 'object',
+  type: 'OBJECT',
   properties: {
-    name: { type: 'string' },
+    name: { type: 'STRING' },
     fields: {
-      type: 'array',
+      type: 'ARRAY',
       items: {
-        type: 'object',
+        type: 'OBJECT',
         properties: {
-          name: { type: 'string' },
+          name: { type: 'STRING' },
           type: {
-            type: 'string',
+            type: 'STRING',
             enum: [
               'TEXT',
               'TEXTAREA',
@@ -33,10 +33,10 @@ const FORM_SCHEMA = {
               'MULTI_SELECT',
             ],
           },
-          required: { type: 'boolean' },
+          required: { type: 'BOOLEAN' },
           options: {
-            type: 'array',
-            items: { type: 'string' },
+            type: 'ARRAY',
+            items: { type: 'STRING' },
           },
         },
         required: ['name', 'type'],
@@ -69,7 +69,7 @@ export class AiFormService {
     workspaceId: string,
     userId: string,
     dto: GenerateFormDto,
-  ) {
+  ): Promise<FormDraft> {
     await this.workspaceAccess.ensureMembership(workspaceId, userId);
 
     const prompt = `Ти — асистент, що проєктує структуру CRM-модуля.
@@ -87,22 +87,22 @@ export class AiFormService {
     userId: string,
     dto: CreateFormFromDraftDto,
   ) {
+    await this.workspaceAccess.ensureMembership(workspaceId, userId);
+
     const module = await this.moduleService.create(workspaceId, userId, {
       name: dto.name,
     });
 
-    const createdFields: Awaited<ReturnType<FieldService['create']>>[] = [];
-
-    for (const field of dto.fields) {
-      const created = await this.fieldService.create(module.id, userId, {
-        name: field.name,
-        type: field.type,
-        required: field.required,
-        options: field.options,
-      });
-
-      createdFields.push(created);
-    }
+    const createdFields = await Promise.all(
+      dto.fields.map((field) =>
+        this.fieldService.create(module.id, userId, {
+          name: field.name,
+          type: field.type,
+          required: field.required,
+          options: field.options,
+        }),
+      ),
+    );
 
     return {
       module,

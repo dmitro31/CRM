@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, KeyboardEvent } from 'react'
 import { AxiosError } from 'axios'
 
 import * as aiApi from '@/lib/ai-api'
@@ -20,6 +20,8 @@ export function AiFormGenerator({ workspaceId, onCreated }: AiFormGeneratorProps
   const [error, setError] = useState<string | null>(null)
 
   const handleGenerate = async () => {
+    if (prompt.trim().length < 5) return
+
     setError(null)
     setDraft(null)
     setIsGenerating(true)
@@ -37,8 +39,16 @@ export function AiFormGenerator({ workspaceId, onCreated }: AiFormGeneratorProps
     }
   }
 
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !isGenerating && prompt.trim().length >= 5) {
+      e.preventDefault()
+      void handleGenerate()
+    }
+  }
+
   const handleConfirm = async () => {
-    if (!draft) return
+    if (!draft || !draft.name.trim() || draft.fields.length === 0) return
+
     setIsCreating(true)
     setError(null)
     try {
@@ -57,6 +67,9 @@ export function AiFormGenerator({ workspaceId, onCreated }: AiFormGeneratorProps
     }
   }
 
+  const isConfirmDisabled =
+    isCreating || !draft?.name.trim() || !draft?.fields.length
+
   return (
     <div className="rounded-lg border bg-purple-50 p-4">
       <h3 className="mb-2 font-medium">✨ Створити модуль через AI</h3>
@@ -68,6 +81,7 @@ export function AiFormGenerator({ workspaceId, onCreated }: AiFormGeneratorProps
         <input
           value={prompt}
           onChange={e => setPrompt(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="Наприклад: облік автомобілів клієнтів автосервісу"
           className="flex-1 rounded border px-3 py-2"
         />
@@ -95,44 +109,48 @@ export function AiFormGenerator({ workspaceId, onCreated }: AiFormGeneratorProps
 
           <div className="mb-4 space-y-1">
             <p className="text-sm font-medium">Поля:</p>
-            {draft.fields.map((field, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm">
-                <input
-                  value={field.name}
-                  onChange={e => {
-                    const next = [...draft.fields]
-                    next[index] = { ...field, name: e.target.value }
-                    setDraft({ ...draft, fields: next })
-                  }}
-                  className="flex-1 rounded border px-2 py-1"
-                />
-                <span className="w-32 text-gray-500">
-                  {FIELD_TYPE_LABELS[field.type]}
-                </span>
-                {field.options && (
-                  <span className="text-xs text-gray-400">
-                    {field.options.join(', ')}
-                  </span>
-                )}
-                <button
-                  onClick={() =>
-                    setDraft({
-                      ...draft,
-                      fields: draft.fields.filter((_, i) => i !== index),
-                    })
-                  }
-                  className="text-red-500 hover:text-red-700"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
+            {draft.fields.map((field, index) => {
+              const fieldTypeKey = field.type as keyof typeof FIELD_TYPE_LABELS
+              const label = FIELD_TYPE_LABELS[fieldTypeKey] ?? field.type
+
+              return (
+                <div key={`${field.name}-${index}`} className="flex items-center gap-2 text-sm">
+                  <input
+                    value={field.name}
+                    onChange={e => {
+                      const next = [...draft.fields]
+                      next[index] = { ...field, name: e.target.value }
+                      setDraft({ ...draft, fields: next })
+                    }}
+                    className="flex-1 rounded border px-2 py-1"
+                  />
+                  <span className="w-32 text-gray-500">{label}</span>
+                  {field.options && field.options.length > 0 && (
+                    <span className="text-xs text-gray-400">
+                      {field.options.join(', ')}
+                    </span>
+                  )}
+                  <button
+                    onClick={() =>
+                      setDraft({
+                        ...draft,
+                        fields: draft.fields.filter((_, i) => i !== index),
+                      })
+                    }
+                    className="text-red-500 hover:text-red-700"
+                    type="button"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )
+            })}
           </div>
 
           <div className="flex gap-2">
             <button
               onClick={() => void handleConfirm()}
-              disabled={isCreating}
+              disabled={isConfirmDisabled}
               className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
             >
               {isCreating ? 'Створення...' : 'Створити модуль'}
@@ -140,6 +158,7 @@ export function AiFormGenerator({ workspaceId, onCreated }: AiFormGeneratorProps
             <button
               onClick={() => setDraft(null)}
               className="rounded border px-4 py-2 hover:bg-gray-50"
+              type="button"
             >
               Скасувати
             </button>

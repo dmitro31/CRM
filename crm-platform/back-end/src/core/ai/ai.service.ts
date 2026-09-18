@@ -10,6 +10,12 @@ export interface AiTool {
 interface GeminiPart {
   text?: string;
   functionCall?: { name: string; args: Record<string, unknown> };
+  functionResponse?: { name: string; response: { result: unknown } };
+}
+
+interface GeminiContent {
+  role: 'user' | 'model';
+  parts: GeminiPart[];
 }
 
 interface GeminiResponse {
@@ -17,20 +23,38 @@ interface GeminiResponse {
     content?: {
       parts?: GeminiPart[];
     };
+    finishReason?: string;
   }[];
-}
-interface GeminiContent {
-  role: 'user' | 'model';
-  parts: (
-    | { text: string }
-    | { functionCall: { name: string; args: Record<string, unknown> } }
-    | { functionResponse: { name: string; response: { result: unknown } } }
-  )[];
 }
 
 @Injectable()
 export class AiService {
   constructor(private readonly config: ConfigService) {}
+
+  private async fetchWithRetry(
+    url: string,
+    options: RequestInit,
+    retries = 3,
+    delay = 1000,
+  ): Promise<Response> {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      const response = await fetch(url, options);
+
+      if (response.ok) return response;
+
+      if ((response.status === 503 || response.status === 429) && attempt < retries) {
+        await new Promise((resolve) => setTimeout(resolve, delay * Math.pow(2, attempt - 1)));
+        continue;
+      }
+
+      const errorBody = await response.text();
+      throw new InternalServerErrorException(
+        `AI generation failed [${response.status}]: ${errorBody}`,
+      );
+    }
+
+    throw new InternalServerErrorException('AI generation failed after retries');
+  }
 
   async generateJson<T>(
     prompt: string,
@@ -39,7 +63,7 @@ export class AiService {
     const apiKey = this.config.getOrThrow<string>('ai.apiKey');
     const model = this.config.getOrThrow<string>('ai.model');
 
-    const response = await fetch(
+    const response = await this.fetchWithRetry(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       {
         method: 'POST',
@@ -48,7 +72,7 @@ export class AiService {
           'x-goog-api-key': apiKey,
         },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
           generationConfig: {
             responseMimeType: 'application/json',
             responseSchema: schema,
@@ -57,13 +81,6 @@ export class AiService {
       },
     );
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new InternalServerErrorException(
-        `AI generation failed: ${errorBody}`,
-      );
-    }
-
     const data = (await response.json()) as GeminiResponse;
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
@@ -71,7 +88,11 @@ export class AiService {
       throw new InternalServerErrorException('AI returned an empty response');
     }
 
-    return JSON.parse(text) as T;
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      throw new InternalServerErrorException('AI response is not valid JSON');
+    }
   }
 
   async chatWithTools(
@@ -92,7 +113,7 @@ export class AiService {
     const maxSteps = 8;
 
     for (let step = 0; step < maxSteps; step++) {
-      const response = await fetch(
+      const response = await this.fetchWithRetry(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
         {
           method: 'POST',
@@ -115,36 +136,25 @@ export class AiService {
         },
       );
 
-      if (!response.ok) {
-        const errorBody = await response.text();
-        throw new InternalServerErrorException(
-          `AI generation failed: ${errorBody}`,
-        );
-      }
-
       const data = (await response.json()) as GeminiResponse;
-      const parts = data.candidates?.[0]?.content?.parts ?? [];
+      const candidateContent = data.candidates?.[0]?.content;
+      const parts = candidateContent?.parts ?? [];
 
-      const functionCallPart = parts.find(
-        (
-          part,
-        ): part is GeminiPart & {
-          functionCall: NonNullable<GeminiPart['functionCall']>;
-        } => part.functionCall !== undefined,
-      );
+      const functionCallPart = parts.find((part) => part.functionCall !== undefined);
 
       if (!functionCallPart) {
         const textPart = parts.find((part) => part.text !== undefined);
         return textPart?.text ?? 'Не вдалося сформувати відповідь';
       }
 
-      const { name, args } = functionCallPart.functionCall;
+      contents.push({
+        role: 'model',
+        parts,
+      });
 
-      console.log(`[AI step ${step}] calling tool "${name}" with args:`, args);
+      const { name, args } = functionCallPart.functionCall!;
 
       const result = await executeTool(name, args);
-
-      console.log(`[AI step ${step}] tool result:`, JSON.stringify(result));
 
       contents.push({
         role: 'user',

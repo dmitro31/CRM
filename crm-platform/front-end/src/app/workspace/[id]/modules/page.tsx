@@ -51,27 +51,33 @@ function ModulesContent() {
 
   const onSubmit = async (data: CreateModuleFormData) => {
     setServerError(null)
+
     try {
       await metadataApi.createModule(workspaceId, data)
       reset()
       setShowForm(false)
-      void queryClient.invalidateQueries({ queryKey: ['modules', workspaceId] })
+      void queryClient.invalidateQueries({
+        queryKey: ['modules', workspaceId],
+      })
     } catch (err) {
       const message =
         err instanceof AxiosError
           ? (err.response?.data as { message?: string })?.message
           : undefined
+
       setServerError(message ?? 'Не вдалося створити модуль')
     }
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-8 py-10">
+    <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <div className="mb-6">
         <AiFormGenerator
           workspaceId={workspaceId}
           onCreated={() =>
-            void queryClient.invalidateQueries({ queryKey: ['modules', workspaceId] })
+            void queryClient.invalidateQueries({
+              queryKey: ['modules', workspaceId],
+            })
           }
         />
       </div>
@@ -79,7 +85,11 @@ function ModulesContent() {
       <PageHeader
         title="Модулі"
         actions={
-          <Button size="sm" onClick={() => setShowForm(v => !v)}>
+          <Button
+            size="sm"
+            onClick={() => setShowForm(v => !v)}
+            className="whitespace-nowrap"
+          >
             + Створити модуль
           </Button>
         }
@@ -88,25 +98,56 @@ function ModulesContent() {
       {showForm && (
         <form onSubmit={handleSubmit(onSubmit)} className="mb-6">
           <Card className="space-y-3">
-            <Input placeholder="Назва модуля (наприклад Клієнти)" {...register('name')} error={errors.name?.message} />
-            <Input placeholder="Опис (необов'язково)" {...register('description')} />
-            {serverError && <p className="text-[12px] text-[#B3261E]">{serverError}</p>}
-            <Button type="submit" disabled={isSubmitting} size="sm">
+            <Input
+              placeholder="Назва модуля (наприклад Клієнти)"
+              {...register('name')}
+              error={errors.name?.message}
+            />
+
+            <Input
+              placeholder="Опис (необов'язково)"
+              {...register('description')}
+            />
+
+            {serverError && (
+              <p className="text-[12px] text-[#B3261E]">
+                {serverError}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              size="sm"
+            >
               {isSubmitting ? 'Створення...' : 'Створити'}
             </Button>
           </Card>
         </form>
       )}
 
-      {isLoading && <p className="text-[13px] text-[#6C716A]">Завантаження...</p>}
+      {isLoading && (
+        <p className="text-[13px] text-[#6C716A]">
+          Завантаження...
+        </p>
+      )}
 
       <div className="space-y-2">
         {modules.map(module => (
-          <Link key={module.id} href={`/workspace/${workspaceId}/modules/${module.id}`}>
+          <Link
+            key={module.id}
+            href={`/workspace/${workspaceId}/modules/${module.id}`}
+            className="block"
+          >
             <Card hoverable>
-              <div className="text-[14px] font-medium text-[#171A18]">{module.name}</div>
+              <div className="break-words text-[14px] font-medium text-[#171A18]">
+                {module.name}
+              </div>
+
               {module.description && (
-                <div className="mt-0.5 text-[12.5px] text-[#6C716A]">{module.description}</div>
+                <div className="mt-0.5 break-words text-[12.5px] text-[#6C716A]">
+                  {module.description}
+                </div>
               )}
             </Card>
           </Link>
