@@ -11,8 +11,15 @@ export class CsrfGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
 
+    // 1. Пропускаємо GET, HEAD, OPTIONS
     const safeMethods = ['GET', 'HEAD', 'OPTIONS'];
     if (safeMethods.includes(request.method)) {
+      return true;
+    }
+
+    // 2. Пропускаємо auth-маршрути (refresh, login, register)
+    const ignoredPaths = ['/auth/refresh', '/auth/login', '/auth/register'];
+    if (ignoredPaths.some(path => request.url.includes(path))) {
       return true;
     }
 
