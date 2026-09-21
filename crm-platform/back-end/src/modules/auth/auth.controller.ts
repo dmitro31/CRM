@@ -8,7 +8,7 @@ import {
   Post,
   Query,
   UseGuards,
-  Patch
+  Patch,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { randomUUID } from 'crypto';
@@ -24,7 +24,6 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
-import { CsrfGuard } from './guards/csrf.guard';
 
 const REFRESH_COOKIE_NAME = 'refreshToken';
 const CSRF_COOKIE_NAME = 'csrfToken';
@@ -55,32 +54,38 @@ interface GoogleOAuthProfile extends OAuthProfile {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   private setAuthCookies(res: Response, refreshToken: string) {
     const csrfToken = randomUUID();
-    const isProduction = process.env.NODE_ENV === 'production';
 
-    // sameSite: 'none' обов'язковий для cross-domain (Vercel ↔ Render),
-    // інакше браузер ніколи не надішле cookie назад
+    // Завжди використовуємо sameSite: 'none' та secure: true для крос-доменних запитів (Vercel -> Render)
     res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: REFRESH_COOKIE_MAX_AGE,
     });
 
     res.cookie(CSRF_COOKIE_NAME, csrfToken, {
       httpOnly: false,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: REFRESH_COOKIE_MAX_AGE,
     });
   }
 
   private clearAuthCookies(res: Response) {
-    res.clearCookie(REFRESH_COOKIE_NAME);
-    res.clearCookie(CSRF_COOKIE_NAME);
+    res.clearCookie(REFRESH_COOKIE_NAME, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    });
+    res.clearCookie(CSRF_COOKIE_NAME, {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'none',
+    });
   }
 
   @Throttle({ default: { limit: 5, ttl: 60000 } })
@@ -114,9 +119,10 @@ export class AuthController {
   verifyEmail(@Query('token') token: string) {
     return this.authService.verifyEmail(token);
   }
+
   @Post('resend-verify-email')
   resendVerifyEmail(@Body() dto: { email: string }) {
-    return this.authService.resendVerifyEmail(dto.email)
+    return this.authService.resendVerifyEmail(dto.email);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -135,7 +141,6 @@ export class AuthController {
     };
   }
 
-  @UseGuards(CsrfGuard)
   @Post('refresh')
   async refresh(
     @Req() req: Request,
@@ -156,7 +161,6 @@ export class AuthController {
     return { accessToken: result.accessToken };
   }
 
-  @UseGuards(CsrfGuard)
   @Post('logout')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const cookies = req.cookies as Record<string, string> | undefined;
@@ -196,7 +200,7 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  googleAuth() { }
+  googleAuth() {}
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
@@ -220,7 +224,7 @@ export class AuthController {
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  github() { }
+  github() {}
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))
@@ -248,15 +252,14 @@ export class AuthController {
     return this.authService.updateProfile(user.id, dto);
   }
 
-  @Get('auth/csrf')
+  @Get('csrf')
   getCsrfToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const token = crypto.randomUUID();
-    res.cookie('csrfToken', token, {
+    const token = randomUUID();
+    res.cookie(CSRF_COOKIE_NAME, token, {
       httpOnly: false,
-      sameSite: 'lax',
+      sameSite: 'none',
       secure: true,
     });
     return { csrfToken: token };
   }
-
 }
