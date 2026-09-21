@@ -11,6 +11,11 @@ export class CsrfGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<Request>();
 
+    const safeMethods = ['GET', 'HEAD', 'OPTIONS'];
+    if (safeMethods.includes(request.method)) {
+      return true;
+    }
+
     const cookies = request.cookies as Record<string, string> | undefined;
     const cookieToken = cookies?.csrfToken;
     const headerToken = request.headers['x-csrf-token'];

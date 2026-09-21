@@ -5,7 +5,6 @@ export default registerAs('redis', () => {
   let host = rawHost;
   let port = Number(process.env.REDIS_PORT) || 6379;
 
-  // Якщо в REDIS_HOST передано URL (redis://host:port)
   if (rawHost.startsWith('redis://') || rawHost.startsWith('rediss://')) {
     try {
       const parsedUrl = new URL(rawHost);
