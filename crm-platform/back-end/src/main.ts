@@ -15,13 +15,20 @@ async function bootstrap() {
   app.use(cookieParser());
   app.useGlobalFilters(new GlobalExceptionFilter());
 
-  // Парсимо origins з очищенням від зайвих пробілів
-  const allowedOrigins =
-    process.env.CORS_ORIGIN?.split(',').map((origin) => origin.trim()) ?? [];
+  const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+    : ['https://www.crm-platform.site'];
 
   app.enableCors({
-    origin: allowedOrigins.length > 0 ? allowedOrigins : true,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
   });
 
   app.useGlobalPipes(
@@ -39,12 +46,7 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
-
   const port = Number(process.env.PORT) || 3000;
-
-  // Обов'язково вказуємо '0.0.0.0' для хостингу Render
   await app.listen(port, '0.0.0.0');
 }
 void bootstrap();

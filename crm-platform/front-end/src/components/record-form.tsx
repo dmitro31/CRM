@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { AxiosError } from 'axios'
 
 import type { Field } from '@/types/metadata'
@@ -27,6 +27,19 @@ export function RecordForm({
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [serverError, setServerError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const isMounted = useRef(true)
+
+  useEffect(() => {
+    isMounted.current = true
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
+
+  useEffect(() => {
+    setFormData(initialData)
+  }, [initialData])
 
   const handleChange = (key: string, value: unknown) => {
     setFormData(prev => ({ ...prev, [key]: value }))
@@ -62,14 +75,28 @@ export function RecordForm({
     setIsSubmitting(true)
     try {
       await onSubmit(formData)
+      if (isMounted.current) {
+        setFormData(initialData)
+      }
     } catch (err) {
-      const message =
-        err instanceof AxiosError
-          ? (err.response?.data as { message?: string })?.message
-          : undefined
+      if (!isMounted.current) return
+
+      let message: string | undefined
+
+      if (err instanceof AxiosError) {
+        const responseData = err.response?.data as { message?: string | string[] } | undefined
+        if (Array.isArray(responseData?.message)) {
+          message = responseData.message.join(', ')
+        } else if (typeof responseData?.message === 'string') {
+          message = responseData.message
+        }
+      }
+
       setServerError(message ?? 'Не вдалося зберегти запис')
     } finally {
-      setIsSubmitting(false)
+      if (isMounted.current) {
+        setIsSubmitting(false)
+      }
     }
   }
 
@@ -101,7 +128,8 @@ export function RecordForm({
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md border border-[#DFE3DC] px-4 py-2 text-[13px] transition-colors hover:bg-[#F6F7F4]"
+          disabled={isSubmitting}
+          className="rounded-md border border-[#DFE3DC] px-4 py-2 text-[13px] transition-colors hover:bg-[#F6F7F4] disabled:opacity-50"
         >
           Скасувати
         </button>

@@ -50,7 +50,9 @@ async function refreshAccessToken(): Promise<string> {
     { refreshToken: storedRefreshToken },
     {
       withCredentials: true,
-      headers: csrfToken ? { 'X-CSRF-Token': csrfToken } : {},
+      headers: {
+        ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),
+      },
     },
   )
 
@@ -80,7 +82,7 @@ apiClient.interceptors.response.use(
     const isLogoutUrl = originalRequest.url?.includes('/auth/logout')
     const status = error.response?.status
 
-    if (status === 401 && !originalRequest._retry && !isRefreshUrl && !isLogoutUrl) {
+    if ((status === 401 || status === 403) && !originalRequest._retry && !isRefreshUrl && !isLogoutUrl) {
       originalRequest._retry = true
 
       try {
