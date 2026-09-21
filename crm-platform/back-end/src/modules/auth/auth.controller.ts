@@ -241,11 +241,22 @@ export class AuthController {
       return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
     }
   }
-  
+
   @UseGuards(JwtAuthGuard)
   @Patch('me')
   updateMe(@CurrentUser() user: User, @Body() dto: UpdateProfileDto) {
     return this.authService.updateProfile(user.id, dto);
+  }
+
+  @Get('auth/csrf')
+  getCsrfToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const token = crypto.randomUUID();
+    res.cookie('csrfToken', token, {
+      httpOnly: false,
+      sameSite: 'lax',
+      secure: true,
+    });
+    return { csrfToken: token };
   }
 
 }
