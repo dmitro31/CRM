@@ -63,21 +63,32 @@ function RecordsContent() {
 
   const displayFields = fields.filter(f => f.isActive).slice(0, 4)
 
-  const invalidateRecords = () =>
-    void queryClient.invalidateQueries({ queryKey: ['records', moduleId] })
+const invalidateRecords = async () => {
+  await queryClient.invalidateQueries({ queryKey: ['records', moduleId] })
+}
 
-  const handleCreate = async (data: Record<string, unknown>) => {
+const handleCreate = async (data: Record<string, unknown>) => {
+  try {
     await recordApi.createRecord(moduleId, data)
     setShowCreateForm(false)
-    invalidateRecords()
+    await invalidateRecords()
+  } catch (error) {
+    console.error('Помилка при створенні:', error)
+    throw error
   }
+}
 
-  const handleUpdate = async (data: Record<string, unknown>) => {
-    if (!editingRecord) return
+const handleUpdate = async (data: Record<string, unknown>) => {
+  if (!editingRecord) return
+  try {
     await recordApi.updateRecord(editingRecord.id, data)
     setEditingRecord(null)
-    invalidateRecords()
+    await invalidateRecords()
+  } catch (error) {
+    console.error('Помилка при оновленні:', error)
+    throw error
   }
+}
 
   const handleDelete = async (recordId: string) => {
     if (!confirm('Видалити цей запис?')) return

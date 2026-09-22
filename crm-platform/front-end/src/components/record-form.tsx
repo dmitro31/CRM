@@ -37,9 +37,11 @@ export function RecordForm({
     }
   }, [])
 
+  const initialDataString = JSON.stringify(initialData)
+
   useEffect(() => {
     setFormData(initialData)
-  }, [initialData])
+  }, [initialDataString])
 
   const handleChange = (key: string, value: unknown) => {
     setFormData(prev => ({ ...prev, [key]: value }))
@@ -76,7 +78,9 @@ export function RecordForm({
     try {
       await onSubmit(formData)
       if (isMounted.current) {
-        setFormData(initialData)
+        // Скидаємо форму після успішного збереження
+        setFormData({})
+        setErrors({})
       }
     } catch (err) {
       if (!isMounted.current) return
@@ -109,7 +113,7 @@ export function RecordForm({
             key={field.id}
             field={field}
             workspaceId={workspaceId}
-            value={formData[field.key]}
+            value={formData[field.key] ?? ''}
             onChange={value => handleChange(field.key, value)}
             error={errors[field.key]}
           />
