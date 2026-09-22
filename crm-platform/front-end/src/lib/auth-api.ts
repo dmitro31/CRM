@@ -1,5 +1,5 @@
 import { apiClient, setAccessToken } from './api-client'
-import type { LoginResponse, RefreshResponse, User, VerifyEmailResponse } from '@/types/auth'
+import type { LoginResponse, RefreshResponse, User , VerifyEmailResponse } from '@/types/auth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://crm-gr3n.onrender.com'
 
@@ -46,16 +46,9 @@ export async function resendVerification(email: string) {
 
 export async function refresh() {
   const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null
-
-  if (!storedRefreshToken) {
-    setAccessToken(null)
-    throw new Error('No refresh token available')
-  }
-
   const { data } = await apiClient.post<RefreshResponse & { refreshToken?: string }>('/auth/refresh', {
     refreshToken: storedRefreshToken,
   })
-
   setAccessToken(data.accessToken)
   if (data.refreshToken && typeof window !== 'undefined') {
     localStorage.setItem('refreshToken', data.refreshToken)
@@ -71,9 +64,7 @@ export async function fetchMe() {
 export async function logout() {
   try {
     const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null
-    if (storedRefreshToken) {
-      await apiClient.post('/auth/logout', { refreshToken: storedRefreshToken })
-    }
+    await apiClient.post('/auth/logout', { refreshToken: storedRefreshToken })
   } catch {
   } finally {
     setAccessToken(null)

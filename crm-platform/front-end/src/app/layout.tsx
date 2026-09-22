@@ -7,7 +7,6 @@ import './globals.css'
 import HeaderWidgets from '@/widgets/Header/Header-widgets'
 import Footer from '@/features/footer/Footer'
 
-// [2] Налаштовуємо шрифт
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
   variable: '--font-inter',
