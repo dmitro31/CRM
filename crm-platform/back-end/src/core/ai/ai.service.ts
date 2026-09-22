@@ -29,7 +29,7 @@ interface GeminiResponse {
 
 @Injectable()
 export class AiService {
-  private readonly fallbackModel = 'gemini-1.5-flash';
+  private readonly fallbackModel = 'gemini-1.5-flash-latest';
 
   constructor(private readonly config: ConfigService) {}
 
@@ -40,8 +40,6 @@ export class AiService {
     initialDelay = 1500,
   ): Promise<Response> {
     const apiKey = this.config.getOrThrow<string>('ai.apiKey');
-    
-    // Спробуємо спочатку вказану модель, а на останній спробі — резервну
     let currentModel = modelName;
 
     for (let attempt = 1; attempt <= retries; attempt++) {
@@ -64,14 +62,18 @@ export class AiService {
         return response;
       }
 
-      // 503 (High Demand) або 429 (Rate Limit) -> робимо паузу і повторюємо
+      // Якщо 404 (невідома модель) — одразу перемикаємося на fallbackModel
+      if (response.status === 404 && currentModel !== this.fallbackModel) {
+        currentModel = this.fallbackModel;
+        continue;
+      }
+
       if ((response.status === 503 || response.status === 429) && attempt < retries) {
         const delay = initialDelay * Math.pow(2, attempt - 1);
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
       }
 
-      // Вичитуємо помилку тільки якщо вичерпано спроби або статус не 503/429
       const errorBody = await response.text();
       throw new InternalServerErrorException(
         `AI generation failed [${response.status}] for model ${currentModel}: ${errorBody}`,
