@@ -1,5 +1,5 @@
 import { apiClient, setAccessToken } from './api-client'
-import type { LoginResponse, RefreshResponse, User } from '@/types/auth'
+import type { LoginResponse, RefreshResponse, User , VerifyEmailResponse } from '@/types/auth'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://crm-gr3n.onrender.com'
 
@@ -29,7 +29,7 @@ export async function register(payload: {
 }
 
 export async function verifyEmail(token: string) {
-  const { data } = await apiClient.get<{ message: string }>(
+  const { data } = await apiClient.get<VerifyEmailResponse>(
     '/auth/verify-email',
     { params: { token } },
   )

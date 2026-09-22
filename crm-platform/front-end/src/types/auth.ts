@@ -18,3 +18,8 @@ export interface LoginResponse {
 export interface RefreshResponse {
   accessToken: string
 }
+
+export interface VerifyEmailResponse {
+  user: User
+  accessToken: string
+}

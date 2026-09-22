@@ -54,7 +54,7 @@ interface GoogleOAuthProfile extends OAuthProfile {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   private setAuthCookies(res: Response, refreshToken: string) {
     const csrfToken = randomUUID();
@@ -116,8 +116,18 @@ export class AuthController {
   }
 
   @Get('verify-email')
-  verifyEmail(@Query('token') token: string) {
-    return this.authService.verifyEmail(token);
+  async verifyEmail(
+    @Query('token') token: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.verifyEmail(token);
+
+    this.setAuthCookies(res, result.refreshToken);
+
+    return {
+      user: result.user,
+      accessToken: result.accessToken,
+    };
   }
 
   @Post('resend-verify-email')
@@ -200,7 +210,7 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  googleAuth() {}
+  googleAuth() { }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
@@ -224,7 +234,7 @@ export class AuthController {
 
   @Get('github')
   @UseGuards(AuthGuard('github'))
-  github() {}
+  github() { }
 
   @Get('github/callback')
   @UseGuards(AuthGuard('github'))

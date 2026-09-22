@@ -5,10 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { AxiosError } from 'axios'
 
 import * as authApi from '@/lib/auth-api'
+import { useAuth } from '@/providers/auth-provider'
 
 export function VerifyEmailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { loginWithToken } = useAuth()
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'resend'>('loading')
   const [message, setMessage] = useState('')
@@ -26,10 +28,15 @@ export function VerifyEmailContent() {
       }
 
       try {
-        await authApi.verifyEmail(token)
+        const result = await authApi.verifyEmail(token)
+
+        // accessToken з верифікації одразу логінить користувача —
+        // без цього довелось би вручну йти на /login
+        await loginWithToken(result.accessToken)
+
         setStatus('success')
-        setMessage('Email успішно підтверджено!')
-        setTimeout(() => router.push('/'), 2000)
+        setMessage('Email підтверджено! Заходимо в акаунт...')
+        setTimeout(() => router.replace('/dashboard'), 1200)
       } catch (err) {
         let errorMessage = 'Не вдалося підтвердити email'
 
@@ -45,7 +52,8 @@ export function VerifyEmailContent() {
     }
 
     void verify()
-  }, [searchParams, router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleResendEmail = async () => {
     if (!email.trim()) {
@@ -86,7 +94,6 @@ export function VerifyEmailContent() {
         {status === 'success' && (
           <div className="space-y-3 text-center">
             <p className="text-lg font-semibold text-green-600">✓ {message}</p>
-            <p className="text-sm text-gray-500">Перенаправляю на головну...</p>
           </div>
         )}
 
