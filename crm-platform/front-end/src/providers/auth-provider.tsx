@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 import type { User } from '@/types/auth'
 import { setAccessToken } from '@/lib/api-client'
@@ -22,6 +22,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const pathname = usePathname()
   const router = useRouter()
 
   const refetchUser = async () => {
@@ -33,36 +34,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  useEffect(() => {
-    let cancelled = false
+useEffect(() => {
+  let cancelled = false
 
-    async function bootstrap() {
-      try {
-        await authApi.refresh()
-        const currentUser = await authApi.fetchMe()
-        if (!cancelled) setUser(currentUser)
-      } catch {
-        if (!cancelled) setUser(null)
-      } finally {
-        if (!cancelled) setIsLoading(false)
+  async function bootstrap() {
+    if (pathname === '/login' || pathname === '/register') {
+      if (!cancelled) setIsLoading(false)
+      return
+    }
+
+    try {
+      await authApi.refresh()
+      const currentUser = await authApi.fetchMe()
+
+      if (!cancelled) {
+        setUser(currentUser)
+      }
+    } catch {
+      if (!cancelled) {
+        setUser(null)
+      }
+    } finally {
+      if (!cancelled) {
+        setIsLoading(false)
       }
     }
+  }
 
-    void bootstrap()
+  void bootstrap()
 
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  return () => {
+    cancelled = true
+  }
+}, [pathname])
 
   const login = async (email: string, password: string) => {
     const result = await authApi.login(email, password)
     setUser(result.user)
   }
 
-  // Для OAuth: токен вже отримано з redirect-параметра,
-  // просто зберігаємо його і одразу підвантажуємо користувача —
-  // без цього ProtectedRoute бачить user === null і кидає на /login
   const loginWithToken = async (token: string) => {
     setAccessToken(token)
     const currentUser = await authApi.fetchMe()

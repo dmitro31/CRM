@@ -25,6 +25,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Throttle } from '@nestjs/throttler';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { GithubAuthGuard } from './guards/github-auth.guard';
+import { CsrfGuard } from './guards/csrf.guard';
 
 const REFRESH_COOKIE_NAME = 'refreshToken';
 const CSRF_COOKIE_NAME = 'csrfToken';
@@ -62,42 +63,34 @@ export class AuthController {
     return url.replace(/\/$/, '');
   }
 
-  private getCookieOptions() {
-    const isProduction = process.env.NODE_ENV === 'production';
-    return {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? ('none' as const) : ('lax' as const),
-      maxAge: REFRESH_COOKIE_MAX_AGE,
-    };
-  }
-
   private setAuthCookies(res: Response, refreshToken: string) {
-    const isProduction = process.env.NODE_ENV === 'production';
     const csrfToken = randomUUID();
 
-    res.cookie(REFRESH_COOKIE_NAME, refreshToken, this.getCookieOptions());
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: REFRESH_COOKIE_MAX_AGE,
+    });
 
     res.cookie(CSRF_COOKIE_NAME, csrfToken, {
       httpOnly: false,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: REFRESH_COOKIE_MAX_AGE,
     });
   }
 
   private clearAuthCookies(res: Response) {
-    const isProduction = process.env.NODE_ENV === 'production';
-
     res.clearCookie(REFRESH_COOKIE_NAME, {
       httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
+      secure: true,
+      sameSite: 'none',
     });
     res.clearCookie(CSRF_COOKIE_NAME, {
       httpOnly: false,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
+      secure: true,
+      sameSite: 'none',
     });
   }
 
@@ -164,25 +157,26 @@ export class AuthController {
     };
   }
 
-  @Post('refresh')
-  async refresh(
-    @Req() req: Request,
-    @Res({ passthrough: true }) res: Response,
-  ) {
-    const cookies = req.cookies as Record<string, string> | undefined;
-    const refreshToken = cookies?.[REFRESH_COOKIE_NAME];
+@UseGuards(CsrfGuard)
+@Post('refresh')
+async refresh(
+  @Req() req: Request,
+  @Res({ passthrough: true }) res: Response,
+) {
+  const cookies = req.cookies as Record<string, string> | undefined;
+  const refreshToken = cookies?.[REFRESH_COOKIE_NAME];
 
-    if (!refreshToken) {
-      this.clearAuthCookies(res);
-      throw new ForbiddenException('No refresh token provided');
-    }
-
-    const result = await this.authService.refresh(refreshToken);
-
-    this.setAuthCookies(res, result.refreshToken);
-
-    return { accessToken: result.accessToken };
+  if (!refreshToken) {
+    this.clearAuthCookies(res);
+    throw new ForbiddenException('No refresh token provided');
   }
+
+  const result = await this.authService.refresh(refreshToken);
+
+  this.setAuthCookies(res, result.refreshToken);
+
+  return { accessToken: result.accessToken };
+}
 
   @Post('logout')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
@@ -275,12 +269,11 @@ export class AuthController {
 
   @Get('csrf')
   getCsrfToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const isProduction = process.env.NODE_ENV === 'production';
     const token = randomUUID();
     res.cookie(CSRF_COOKIE_NAME, token, {
       httpOnly: false,
-      sameSite: isProduction ? 'none' : 'lax',
-      secure: isProduction,
+      sameSite: 'none',
+      secure: true,
     });
     return { csrfToken: token };
   }
