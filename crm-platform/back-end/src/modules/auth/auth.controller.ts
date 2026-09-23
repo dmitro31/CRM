@@ -157,15 +157,12 @@ export class AuthController {
     };
   }
 
-@UseGuards(CsrfGuard)
+
 @Post('refresh')
 async refresh(
   @Req() req: Request,
   @Res({ passthrough: true }) res: Response,
 ) {
-  console.log('Incoming Headers:', req.headers);
-  console.log('Incoming Cookies:', req.cookies);
-
   const cookies = req.cookies as Record<string, string> | undefined;
   const refreshToken = cookies?.[REFRESH_COOKIE_NAME];
 

@@ -9,8 +9,6 @@ import {
   Activity,
   ArrowRight,
   BarChart3,
-  Bell,
-  CheckCircle2,
   Database,
   Layers,
   MessageSquare,
@@ -24,8 +22,6 @@ import {
 
 import { RecordsTimelineChart } from '@/components/records-timeline-chart'
 import { PipelineWidget } from '@/components/pipeline-widget'
-import * as metadataApi from '@/lib/metadata-api'
-
 import { ProtectedRoute } from '@/components/protected-route'
 import { Button } from '@/shared/UI/Button'
 import { Input } from '@/shared/UI/Input'
@@ -39,7 +35,6 @@ import {
   createWorkspaceSchema,
   type CreateWorkspaceFormData,
 } from '@/lib/validation/workspace-schemas'
-
 import { RecentNotifications } from '@/components/recent-notifications'
 
 export default function DashboardPage() {
@@ -84,39 +79,9 @@ function WorkspaceOverview({
   workspaceName: string
   userName: string
 }) {
-  const { data: overview, isLoading } = useQuery({
-    queryKey: ['workspace-overview', workspaceId],
-    queryFn: () => dashboardApi.getWorkspaceOverview(workspaceId),
-  })
-
-  const { data: modulesWithFields = [] } = useQuery({
-    queryKey: [
-      'modules-with-fields-dashboard',
-      workspaceId,
-      overview?.modules.map((m) => m.id),
-    ],
-    queryFn: async () => {
-      const results = await Promise.all(
-        (overview?.modules ?? []).map(async (m) => ({
-          ...m,
-          fields: await metadataApi.getFields(m.id),
-        })),
-      )
-
-      return results
-    },
-    enabled: !!overview && overview.modules.length > 0,
-  })
-
-  const { data: timeline = [] } = useQuery({
-    queryKey: [
-      'records-timeline',
-      workspaceId,
-      overview?.modules.map((m) => m.id),
-    ],
-    queryFn: () =>
-      dashboardApi.getRecordsTimeline(workspaceId, overview!.modules),
-    enabled: !!overview && overview.modules.length > 0,
+  const { data, isLoading } = useQuery({
+    queryKey: ['dashboard-data', workspaceId],
+    queryFn: () => dashboardApi.getDashboardData(workspaceId),
   })
 
   return (
@@ -127,7 +92,6 @@ function WorkspaceOverview({
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[#E7EEE9] text-[#24493B]">
               <Activity size={14} />
             </span>
-
             <span className="text-[11px] font-medium text-[#8B9088]">
               {workspaceName}
             </span>
@@ -167,34 +131,31 @@ function WorkspaceOverview({
           <SkeletonCard />
           <SkeletonCard />
         </div>
-      ) : overview ? (
+      ) : data ? (
         <>
           <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard
               icon={<Layers size={17} />}
               label="Модулі"
-              value={overview.moduleCount}
+              value={data.moduleCount}
               href={`/workspace/${workspaceId}/modules`}
             />
 
             <StatCard
               icon={<Database size={17} />}
               label="Записи"
-              value={overview.totalRecords}
+              value={data.totalRecords}
               href={`/workspace/${workspaceId}/modules`}
             />
 
             <StatCard
               icon={<Workflow size={17} />}
               label="Автоматизації"
-              value={`${overview.activeWorkflows}/${overview.workflowCount}`}
+              value={`${data.activeWorkflows}/${data.workflowCount}`}
               href={`/workspace/${workspaceId}/workflows`}
             />
 
-            <Link
-              href={`/workspace/${workspaceId}/ai`}
-              className="group"
-            >
+            <Link href={`/workspace/${workspaceId}/ai`} className="group">
               <Card
                 hoverable
                 className="relative h-full overflow-hidden border-[#D7E1DA] bg-[#F8FAF8]"
@@ -206,7 +167,6 @@ function WorkspaceOverview({
                       AI Асистент
                     </span>
                   </div>
-
                   <ArrowRight
                     size={14}
                     className="text-[#8B9088] transition-transform group-hover:translate-x-0.5"
@@ -234,7 +194,6 @@ function WorkspaceOverview({
                       Активність
                     </h2>
                   </div>
-
                   <p className="mt-1 text-[11px] text-[#8B9088]">
                     Кількість нових записів за останні 14 днів
                   </p>
@@ -246,8 +205,8 @@ function WorkspaceOverview({
               </div>
 
               <div className="mt-6">
-                {timeline.length > 0 ? (
-                  <RecordsTimelineChart data={timeline} />
+                {data.timeline.length > 0 ? (
+                  <RecordsTimelineChart data={data.timeline} />
                 ) : (
                   <div className="flex h-[220px] items-center justify-center rounded-md border border-dashed border-[#E1E5DF]">
                     <div className="text-center">
@@ -273,7 +232,6 @@ function WorkspaceOverview({
                       Воронка
                     </h2>
                   </div>
-
                   <p className="mt-1 text-[11px] text-[#8B9088]">
                     Розподіл даних за полем
                   </p>
@@ -281,7 +239,7 @@ function WorkspaceOverview({
               </div>
 
               <div className="mt-5">
-                <PipelineWidget modules={modulesWithFields} />
+                <PipelineWidget modules={data.modules} />
               </div>
             </Card>
           </div>
@@ -307,7 +265,7 @@ function WorkspaceOverview({
                 </Link>
               </div>
 
-              {overview.recentRecords.length === 0 ? (
+              {data.recentRecords.length === 0 ? (
                 <EmptyState
                   title="Ще немає жодного запису."
                   action={
@@ -321,9 +279,9 @@ function WorkspaceOverview({
                 />
               ) : (
                 <Card padded={false} className="overflow-hidden">
-                  {overview.recentRecords.map(
+                  {data.recentRecords.map(
                     ({ record, moduleName, moduleId }) => {
-                      const module_ = overview.modules.find(
+                      const module_ = data.modules.find(
                         (m) => m.id === moduleId,
                       )
 
@@ -351,9 +309,7 @@ function WorkspaceOverview({
                                 <span className="truncate text-[11px] text-[#8B9088]">
                                   {moduleName}
                                 </span>
-
                                 <span className="text-[#C3C7C1]">·</span>
-
                                 <span className="text-[10px] text-[#9A9F98]">
                                   Запис
                                 </span>
@@ -363,11 +319,10 @@ function WorkspaceOverview({
 
                           <div className="ml-4 flex shrink-0 items-center gap-2">
                             <span className="font-mono text-[10px] text-[#8B9088]">
-                              {new Date(
-                                record.createdAt,
-                              ).toLocaleDateString('uk-UA')}
+                              {new Date(record.createdAt).toLocaleDateString(
+                                'uk-UA',
+                              )}
                             </span>
-
                             <ArrowRight
                               size={12}
                               className="text-[#B0B5AE] transition-transform group-hover:translate-x-0.5"
@@ -399,21 +354,18 @@ function WorkspaceOverview({
                     label="Створити модуль"
                     description="Нова структура даних"
                   />
-
                   <QuickAction
                     href={`/workspace/${workspaceId}/workflows`}
                     icon={<Workflow size={14} />}
                     label="Нова автоматизація"
                     description="Автоматизувати процес"
                   />
-
                   <QuickAction
                     href={`/workspace/${workspaceId}/members`}
                     icon={<UserPlus size={14} />}
                     label="Запросити учасника"
                     description="Додати до workspace"
                   />
-
                   <QuickAction
                     href={`/workspace/${workspaceId}/ai`}
                     icon={<Sparkles size={14} />}
@@ -437,7 +389,6 @@ function WorkspaceOverview({
               href={`/workspace/${workspaceId}/members`}
               action="Учасники"
             />
-
             <DashboardInfoCard
               icon={<Workflow size={16} />}
               title="Автоматизації"
@@ -445,7 +396,6 @@ function WorkspaceOverview({
               href={`/workspace/${workspaceId}/workflows`}
               action="Відкрити"
             />
-
             <DashboardInfoCard
               icon={<MessageSquare size={16} />}
               title="AI Асистент"
