@@ -22,8 +22,9 @@ import { CurrentUser } from 'common/decorators/current-user.decorator';
 import type { User } from '@prisma/client';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { AuthGuard } from '@nestjs/passport';
 import { Throttle } from '@nestjs/throttler';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { GithubAuthGuard } from './guards/github-auth.guard';
 
 const REFRESH_COOKIE_NAME = 'refreshToken';
 const CSRF_COOKIE_NAME = 'csrfToken';
@@ -54,12 +55,16 @@ interface GoogleOAuthProfile extends OAuthProfile {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
+
+  private getFrontendUrl(): string {
+    const url = process.env.APP_URL || 'http://localhost:3000';
+    return url.replace(/\/$/, '');
+  }
 
   private setAuthCookies(res: Response, refreshToken: string) {
     const csrfToken = randomUUID();
 
-    // Завжди використовуємо sameSite: 'none' та secure: true для крос-доменних запитів (Vercel -> Render)
     res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
       httpOnly: true,
       secure: true,
@@ -209,49 +214,47 @@ export class AuthController {
   }
 
   @Get('google')
-  @UseGuards(AuthGuard('google'))
-  googleAuth() { }
+  @UseGuards(GoogleAuthGuard)
+  googleAuth() {}
 
   @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
+  @UseGuards(GoogleAuthGuard)
   async googleCallback(
     @Req() req: Request & { user: GoogleOAuthProfile },
     @Res() res: Response,
   ) {
+    const frontendUrl = this.getFrontendUrl();
     try {
       const result = await this.authService.googleLogin(req.user);
       this.setAuthCookies(res, result.refreshToken);
 
-      const frontendUrl = process.env.APP_URL;
       return res.redirect(
         `${frontendUrl}/oauth-success?token=${encodeURIComponent(result.accessToken)}`,
       );
     } catch {
-      const frontendUrl = process.env.APP_URL;
       return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
     }
   }
 
   @Get('github')
-  @UseGuards(AuthGuard('github'))
-  github() { }
+  @UseGuards(GithubAuthGuard)
+  github() {}
 
   @Get('github/callback')
-  @UseGuards(AuthGuard('github'))
+  @UseGuards(GithubAuthGuard)
   async githubCallback(
     @Req() req: Request & { user: GithubOAuthProfile },
     @Res() res: Response,
   ) {
+    const frontendUrl = this.getFrontendUrl();
     try {
       const result = await this.authService.githubLogin(req.user);
       this.setAuthCookies(res, result.refreshToken);
 
-      const frontendUrl = process.env.APP_URL;
       return res.redirect(
         `${frontendUrl}/oauth-success?token=${encodeURIComponent(result.accessToken)}`,
       );
     } catch {
-      const frontendUrl = process.env.APP_URL;
       return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
     }
   }
