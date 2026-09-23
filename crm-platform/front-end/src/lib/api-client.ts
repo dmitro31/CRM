@@ -72,11 +72,23 @@ apiClient.interceptors.response.use(
       return Promise.reject(error)
     }
 
-    const isRefreshUrl = originalRequest.url?.includes('/auth/refresh')
-    const isLogoutUrl = originalRequest.url?.includes('/auth/logout')
+    // Виключаємо всі ендпоінти авторизації, які не повинні викликати автоматичний refresh
+    const bypassRefreshUrls = [
+      '/auth/login',
+      '/auth/register',
+      '/auth/refresh',
+      '/auth/logout',
+      '/auth/forgot-password',
+      '/auth/reset-password',
+      '/auth/verify-email',
+    ]
+
+    const isBypassUrl = bypassRefreshUrls.some((url) =>
+      originalRequest.url?.includes(url),
+    )
     const status = error.response?.status
 
-    if ((status === 401 || status === 403) && !originalRequest._retry && !isRefreshUrl && !isLogoutUrl) {
+    if ((status === 401 || status === 403) && !originalRequest._retry && !isBypassUrl) {
       originalRequest._retry = true
 
       try {
@@ -92,7 +104,6 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         setAccessToken(null)
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('refreshToken')
           if (window.location.pathname !== '/login') {
             window.location.href = '/login'
           }
