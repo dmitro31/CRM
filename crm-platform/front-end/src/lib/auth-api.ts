@@ -45,15 +45,36 @@ export async function resendVerification(email: string) {
 }
 
 export async function refresh() {
-  const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null
-  const { data } = await apiClient.post<RefreshResponse & { refreshToken?: string }>('/auth/refresh', {
-    refreshToken: storedRefreshToken,
-  })
-  setAccessToken(data.accessToken)
-  if (data.refreshToken && typeof window !== 'undefined') {
-    localStorage.setItem('refreshToken', data.refreshToken)
+  const storedRefreshToken =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('refreshToken')
+      : null
+
+  if (!storedRefreshToken) {
+    throw new Error('Refresh token is missing')
   }
-  return data
+
+  try {
+    const { data } = await apiClient.post<
+      RefreshResponse & { refreshToken?: string }
+    >('/auth/refresh', {
+      refreshToken: storedRefreshToken,
+    })
+
+    setAccessToken(data.accessToken)
+
+    if (data.refreshToken && typeof window !== 'undefined') {
+      localStorage.setItem('refreshToken', data.refreshToken)
+    }
+
+    return data
+  } catch (error) {
+    setAccessToken(null)
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('refreshToken')
+    }
+    throw error
+  }
 }
 
 export async function fetchMe() {
