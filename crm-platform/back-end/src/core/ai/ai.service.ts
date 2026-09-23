@@ -29,7 +29,7 @@ interface GeminiResponse {
 
 @Injectable()
 export class AiService {
-  private readonly fallbackModel = 'gemini-1.5-flash-latest';
+  private readonly fallbackModel = 'gemini-2.0-flash';
 
   constructor(private readonly config: ConfigService) {}
 
