@@ -62,34 +62,42 @@ export class AuthController {
     return url.replace(/\/$/, '');
   }
 
+  private getCookieOptions() {
+    const isProduction = process.env.NODE_ENV === 'production';
+    return {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? ('none' as const) : ('lax' as const),
+      maxAge: REFRESH_COOKIE_MAX_AGE,
+    };
+  }
+
   private setAuthCookies(res: Response, refreshToken: string) {
+    const isProduction = process.env.NODE_ENV === 'production';
     const csrfToken = randomUUID();
 
-    res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      maxAge: REFRESH_COOKIE_MAX_AGE,
-    });
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, this.getCookieOptions());
 
     res.cookie(CSRF_COOKIE_NAME, csrfToken, {
       httpOnly: false,
-      secure: true,
-      sameSite: 'none',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: REFRESH_COOKIE_MAX_AGE,
     });
   }
 
   private clearAuthCookies(res: Response) {
+    const isProduction = process.env.NODE_ENV === 'production';
+
     res.clearCookie(REFRESH_COOKIE_NAME, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
     });
     res.clearCookie(CSRF_COOKIE_NAME, {
       httpOnly: false,
-      secure: true,
-      sameSite: 'none',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
     });
   }
 
@@ -267,11 +275,12 @@ export class AuthController {
 
   @Get('csrf')
   getCsrfToken(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const isProduction = process.env.NODE_ENV === 'production';
     const token = randomUUID();
     res.cookie(CSRF_COOKIE_NAME, token, {
       httpOnly: false,
-      sameSite: 'none',
-      secure: true,
+      sameSite: isProduction ? 'none' : 'lax',
+      secure: isProduction,
     });
     return { csrfToken: token };
   }

@@ -43,11 +43,10 @@ let refreshPromise: Promise<string> | null = null
 
 async function refreshAccessToken(): Promise<string> {
   const csrfToken = getCsrfTokenFromCookie()
-  const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null
 
   const response = await axios.post(
     `${API_URL}/auth/refresh`,
-    { refreshToken: storedRefreshToken },
+    {},
     {
       withCredentials: true,
       headers: {
@@ -57,12 +56,7 @@ async function refreshAccessToken(): Promise<string> {
   )
 
   const newToken = response.data.accessToken as string
-  const newRefreshToken = response.data.refreshToken as string | undefined
-
   setAccessToken(newToken)
-  if (newRefreshToken && typeof window !== 'undefined') {
-    localStorage.setItem('refreshToken', newRefreshToken)
-  }
 
   return newToken
 }

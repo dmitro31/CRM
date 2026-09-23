@@ -4,14 +4,11 @@ import type { LoginResponse, RefreshResponse, User, VerifyEmailResponse } from '
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://crm-gr3n.onrender.com').replace(/\/$/, '')
 
 export async function login(email: string, password: string) {
-  const { data } = await apiClient.post<LoginResponse & { refreshToken?: string }>('/auth/login', {
+  const { data } = await apiClient.post<LoginResponse>('/auth/login', {
     email,
     password,
   })
   setAccessToken(data.accessToken)
-  if (data.refreshToken && typeof window !== 'undefined') {
-    localStorage.setItem('refreshToken', data.refreshToken)
-  }
   return data
 }
 
@@ -33,6 +30,7 @@ export async function verifyEmail(token: string) {
     '/auth/verify-email',
     { params: { token } },
   )
+  setAccessToken(data.accessToken)
   return data
 }
 
@@ -45,14 +43,8 @@ export async function resendVerification(email: string) {
 }
 
 export async function refresh() {
-  const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null
-  const { data } = await apiClient.post<RefreshResponse & { refreshToken?: string }>('/auth/refresh', {
-    refreshToken: storedRefreshToken,
-  })
+  const { data } = await apiClient.post<RefreshResponse>('/auth/refresh')
   setAccessToken(data.accessToken)
-  if (data.refreshToken && typeof window !== 'undefined') {
-    localStorage.setItem('refreshToken', data.refreshToken)
-  }
   return data
 }
 
@@ -63,14 +55,10 @@ export async function fetchMe() {
 
 export async function logout() {
   try {
-    const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null
-    await apiClient.post('/auth/logout', { refreshToken: storedRefreshToken })
+    await apiClient.post('/auth/logout')
   } catch {
   } finally {
     setAccessToken(null)
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('refreshToken')
-    }
   }
 }
 
