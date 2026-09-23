@@ -18,7 +18,10 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <span className="text-gray-500">Завантаження...</span>
+        <div className="text-center">
+          <div className="mx-auto mb-3 h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-gray-950" />
+          <span className="text-sm text-gray-400">Завантаження...</span>
+        </div>
       </div>
     )
   }

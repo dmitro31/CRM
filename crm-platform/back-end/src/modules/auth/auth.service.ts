@@ -124,93 +124,93 @@ export class AuthService {
     });
   }
 
- async verifyEmail(token: string) {
-  const verificationToken = await this.prisma.verificationToken.findUnique({
-    where: {
-      token,
-    },
-  });
-
-  if (!verificationToken) {
-    throw new BadRequestException('Invalid verification token');
-  }
-
-  if (verificationToken.type !== 'EMAIL_VERIFICATION') {
-    throw new BadRequestException('Invalid verification token');
-  }
-
-  if (verificationToken.expiresAt < new Date()) {
-    await this.prisma.verificationToken.delete({
+  async verifyEmail(token: string) {
+    const verificationToken = await this.prisma.verificationToken.findUnique({
       where: {
-        id: verificationToken.id,
+        token,
       },
     });
 
-    throw new BadRequestException('Verification token has expired');
-  }
+    if (!verificationToken) {
+      throw new BadRequestException('Invalid verification token');
+    }
 
-  const [user] = await this.prisma.$transaction([
-    this.prisma.user.update({
-      where: {
-        id: verificationToken.userId,
-      },
-      data: {
-        isVerified: true,
-      },
-    }),
-    this.prisma.verificationToken.delete({
-      where: {
-        id: verificationToken.id,
-      },
-    }),
-  ]);
+    if (verificationToken.type !== 'EMAIL_VERIFICATION') {
+      throw new BadRequestException('Invalid verification token');
+    }
 
-  if (!user.isActive) {
-    throw new UnauthorizedException('User account is inactive.');
-  }
+    if (verificationToken.expiresAt < new Date()) {
+      await this.prisma.verificationToken.delete({
+        where: {
+          id: verificationToken.id,
+        },
+      });
 
-  const refreshToken = await this.refreshTokenService.createSession(
-    user.id,
-    user.email,
-  );
+      throw new BadRequestException('Verification token has expired');
+    }
 
-  const payload = this.tokenService.decode(refreshToken);
+    const [user] = await this.prisma.$transaction([
+      this.prisma.user.update({
+        where: {
+          id: verificationToken.userId,
+        },
+        data: {
+          isVerified: true,
+        },
+      }),
+      this.prisma.verificationToken.delete({
+        where: {
+          id: verificationToken.id,
+        },
+      }),
+    ]);
 
-  if (!payload?.tid) {
-    throw new UnauthorizedException(
-      'Failed to create authentication session.',
+    if (!user.isActive) {
+      throw new UnauthorizedException('User account is inactive.');
+    }
+
+    const refreshToken = await this.refreshTokenService.createSession(
+      user.id,
+      user.email,
     );
+
+    const payload = this.tokenService.decode(refreshToken);
+
+    if (!payload?.tid) {
+      throw new UnauthorizedException(
+        'Failed to create authentication session.',
+      );
+    }
+
+    const accessToken = await this.tokenService.generateAccessToken({
+      sub: user.id,
+      email: user.email,
+      tid: payload.tid,
+    });
+
+    return this.buildAuthResponse(user, {
+      accessToken,
+      refreshToken,
+    });
   }
-
-  const accessToken = await this.tokenService.generateAccessToken({
-    sub: user.id,
-    email: user.email,
-    tid: payload.tid,
-  });
-
-  return this.buildAuthResponse(user, {
-    accessToken,
-    refreshToken,
-  });
-}
 
   async resendVerifyEmail(email: string) {
-  const user = await this.prisma.user.findUnique({ where: { email } })
+    const user = await this.prisma.user.findUnique({ where: { email } })
 
-  if (!user) {
-    throw new BadRequestException('User not found')
+    if (!user) {
+      throw new BadRequestException('User not found')
+    }
+
+    if (user.isVerified) {
+      throw new BadRequestException('Email already verified')
+    }
+
+    const token =
+      await this.verificationTokenService.createEmailVerificationToken(user.id)
+    await this.mailService.sendVerificationEmail(user.email, user.firstName, token)
+
+    return { message: 'Verification email sent' }
   }
-
-  if (user.isVerified) {
-    throw new BadRequestException('Email already verified')
-  }
-
-  const token =
-    await this.verificationTokenService.createEmailVerificationToken(user.id)
-  await this.mailService.sendVerificationEmail(user.email, user.firstName, token)
-
-  return { message: 'Verification email sent' }
-}
 
   async resendVerificationEmail(email: string) {
     const user = await this.prisma.user.findUnique({
@@ -269,38 +269,11 @@ export class AuthService {
       createdAt: user.createdAt,
     };
   }
-
-  private getRefreshTokenExpiresAt(): Date {
-    const expiresIn = this.config.getOrThrow<string>('jwt.refreshExpiresIn');
-
-    const match = expiresIn.match(/^(\d+)([smhd])$/);
-
-    if (!match) {
-      return new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    }
-
-    const value = Number(match[1]);
-    const unit = match[2];
-
-    const multipliers = {
-      s: 1000,
-      m: 60 * 1000,
-      h: 60 * 60 * 1000,
-      d: 24 * 60 * 60 * 1000,
-    };
-
-    return new Date(
-      Date.now() + value * multipliers[unit as keyof typeof multipliers],
-    );
-  }
-
   async refresh(refreshToken: string) {
     const payload = await this.refreshTokenService.validate(refreshToken);
 
     const user = await this.prisma.user.findUnique({
-      where: {
-        id: payload.sub,
-      },
+      where: { id: payload.sub },
     });
 
     if (!user) {
@@ -330,6 +303,7 @@ export class AuthService {
     return {
       accessToken,
       refreshToken: newRefreshToken,
+      user: this.toUserResponse(user),
     };
   }
 
@@ -629,5 +603,5 @@ export class AuthService {
 
     return this.toUserResponse(user);
   }
-  
+
 }
