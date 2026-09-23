@@ -16,10 +16,22 @@ export class HealthController {
   ) {}
 
   @Get()
+  ping() {
+    return {
+      status: 'ok',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get('db')
   @HealthCheck()
-  check() {
+  checkDb() {
     return this.health.check([
-      () => this.prismaIndicator.pingCheck('database', this.prisma),
+      () =>
+        this.prismaIndicator.pingCheck('database', this.prisma, {
+          timeout: 5000,
+        }),
     ]);
   }
 }
