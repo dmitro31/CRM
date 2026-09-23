@@ -33,6 +33,7 @@ import { NotificationModule } from 'modules/notifications/notification.module';
 import { ActivityModule } from 'modules/activity/activity.module';
 import { CommentsModule } from 'modules/comments/comments.module';
 import { TasksModule } from 'modules/tasks/tasks.module';
+import { DashboardModule } from 'modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { TasksModule } from 'modules/tasks/tasks.module';
     PrismaModule,
     AuthModule,
     WorkspaceModule,
+    DashboardModule,
     NotificationModule,
     MetadataModule,
     RecordModule,
