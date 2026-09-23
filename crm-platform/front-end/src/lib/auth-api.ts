@@ -1,7 +1,7 @@
 import { apiClient, setAccessToken } from './api-client'
-import type { LoginResponse, RefreshResponse, User , VerifyEmailResponse } from '@/types/auth'
+import type { LoginResponse, RefreshResponse, User, VerifyEmailResponse } from '@/types/auth'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://crm-gr3n.onrender.com'
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://crm-gr3n.onrender.com').replace(/\/$/, '')
 
 export async function login(email: string, password: string) {
   const { data } = await apiClient.post<LoginResponse & { refreshToken?: string }>('/auth/login', {
