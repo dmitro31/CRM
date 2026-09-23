@@ -25,7 +25,6 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { Throttle } from '@nestjs/throttler';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { GithubAuthGuard } from './guards/github-auth.guard';
-import { CsrfGuard } from './guards/csrf.guard';
 
 const REFRESH_COOKIE_NAME = 'refreshToken';
 const CSRF_COOKIE_NAME = 'csrfToken';
@@ -157,26 +156,25 @@ export class AuthController {
     };
   }
 
+  @Post('refresh')
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const cookies = req.cookies as Record<string, string> | undefined;
+    const refreshToken = cookies?.[REFRESH_COOKIE_NAME];
 
-@Post('refresh')
-async refresh(
-  @Req() req: Request,
-  @Res({ passthrough: true }) res: Response,
-) {
-  const cookies = req.cookies as Record<string, string> | undefined;
-  const refreshToken = cookies?.[REFRESH_COOKIE_NAME];
+    if (!refreshToken) {
+      this.clearAuthCookies(res);
+      throw new ForbiddenException('No refresh token provided');
+    }
 
-  if (!refreshToken) {
-    this.clearAuthCookies(res);
-    throw new ForbiddenException('No refresh token provided');
+    const result = await this.authService.refresh(refreshToken);
+
+    this.setAuthCookies(res, result.refreshToken);
+
+    return { accessToken: result.accessToken };
   }
-
-  const result = await this.authService.refresh(refreshToken);
-
-  this.setAuthCookies(res, result.refreshToken);
-
-  return { accessToken: result.accessToken };
-}
 
   @Post('logout')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
