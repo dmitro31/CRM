@@ -1,4 +1,5 @@
 import { apiClient } from './api-client'
+import * as recordApi from './record-api'
 import type { CrmModule } from '@/types/metadata'
 import type { CrmRecord } from '@/types/record'
 
@@ -33,4 +34,26 @@ export function firstDisplayValue(record: CrmRecord, module_: CrmModule): string
   if (!firstField) return record.id.slice(0, 8)
   const value = record.data[firstField.key]
   return value ? String(value) : record.id.slice(0, 8)
+}
+
+export interface PipelineStage {
+  label: string
+  count: number
+}
+
+export async function getPipelineBreakdown(
+  moduleId: string,
+  fieldKey: string,
+  options: string[],
+): Promise<PipelineStage[]> {
+  const results = await Promise.all(
+    options.map(async option => {
+      const result = await recordApi.getRecords(moduleId, {
+        [fieldKey]: option,
+        limit: '1',
+      })
+      return { label: option, count: result.total }
+    }),
+  )
+  return results
 }
