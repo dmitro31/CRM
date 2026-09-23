@@ -178,7 +178,7 @@ async refresh(
 
   this.setAuthCookies(res, result.refreshToken);
 
-  return { accessToken: result.accessToken, user: result.user };
+  return { accessToken: result.accessToken };
 }
 
   @Post('logout')
