@@ -26,8 +26,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       googleId: id,
       email: emails?.[0]?.value,
       avatar: photos?.[0]?.value,
-      firstName: name?.givenName ?? displayName.split(' ')[0] ?? '',
-      lastName: name?.familyName ?? displayName.split(' ').slice(1).join(' ') ?? '',
+      firstName: name?.givenName ?? displayName?.split(' ')[0] ?? '',
+      lastName: name?.familyName ?? displayName?.split(' ').slice(1).join(' ') ?? '',
     };
 
     done(null, user);
