@@ -17,6 +17,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
+    if (response.headersSent) {
+      return;
+    }
+
     const status =
       exception instanceof HttpException
         ? exception.getStatus()

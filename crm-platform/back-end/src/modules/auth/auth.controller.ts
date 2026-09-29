@@ -157,26 +157,26 @@ export class AuthController {
     };
   }
 
-@UseGuards(CsrfGuard)
-@Post('refresh')
-async refresh(
-  @Req() req: Request,
-  @Res({ passthrough: true }) res: Response,
-) {
-  const cookies = req.cookies as Record<string, string> | undefined;
-  const refreshToken = cookies?.[REFRESH_COOKIE_NAME];
+  @UseGuards(CsrfGuard)
+  @Post('refresh')
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const cookies = req.cookies as Record<string, string> | undefined;
+    const refreshToken = cookies?.[REFRESH_COOKIE_NAME];
 
-  if (!refreshToken) {
-    this.clearAuthCookies(res);
-    throw new ForbiddenException('No refresh token provided');
+    if (!refreshToken) {
+      this.clearAuthCookies(res);
+      throw new ForbiddenException('No refresh token provided');
+    }
+
+    const result = await this.authService.refresh(refreshToken);
+
+    this.setAuthCookies(res, result.refreshToken);
+
+    return { accessToken: result.accessToken };
   }
-
-  const result = await this.authService.refresh(refreshToken);
-
-  this.setAuthCookies(res, result.refreshToken);
-
-  return { accessToken: result.accessToken };
-}
 
   @Post('logout')
   async logout(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
@@ -233,7 +233,11 @@ async refresh(
       return res.redirect(
         `${frontendUrl}/oauth-success?token=${encodeURIComponent(result.accessToken)}`,
       );
-    } catch {
+    } catch (error) {
+      console.error('Google Auth Error:', error);
+      if (res.headersSent) {
+        return;
+      }
       return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
     }
   }
@@ -256,7 +260,11 @@ async refresh(
       return res.redirect(
         `${frontendUrl}/oauth-success?token=${encodeURIComponent(result.accessToken)}`,
       );
-    } catch {
+    } catch (error) {
+      console.error('GitHub Auth Error:', error);
+      if (res.headersSent) {
+        return;
+      }
       return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
     }
   }
