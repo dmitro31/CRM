@@ -47,7 +47,18 @@ export default function DashboardPage() {
 
 function DashboardContent() {
   const { user } = useAuth()
-  const { currentWorkspace, workspaces, refetchWorkspaces } = useWorkspace()
+  const { currentWorkspace, workspaces, refetchWorkspaces, isLoading } = useWorkspace()
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-3 h-6 w-6 animate-spin rounded-full border-2 border-gray-200 border-t-gray-950" />
+          <span className="text-sm text-gray-400">Завантаження workspace...</span>
+        </div>
+      </div>
+    )
+  }
 
   if (workspaces.length === 0) {
     return <EmptyWorkspaceState onCreated={refetchWorkspaces} />
@@ -56,7 +67,7 @@ function DashboardContent() {
   if (!currentWorkspace) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <p className="text-[13px] text-[#6C716A]">Завантаження...</p>
+        <p className="text-[13px] text-[#6C716A]">Оберіть workspace для продовження</p>
       </div>
     )
   }
@@ -82,6 +93,10 @@ function WorkspaceOverview({
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard-data', workspaceId],
     queryFn: () => dashboardApi.getDashboardData(workspaceId),
+    enabled: Boolean(workspaceId),
+    staleTime: 1000 * 60 * 5,
+    retry: 1,
+    refetchOnWindowFocus: false,
   })
 
   return (
