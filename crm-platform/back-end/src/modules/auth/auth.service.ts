@@ -294,44 +294,30 @@ export class AuthService {
     );
   }
 
-  async refresh(refreshToken: string) {
-    const payload = await this.refreshTokenService.validate(refreshToken);
+async refresh(refreshToken: string) {
+  const payload = await this.refreshTokenService.validate(refreshToken)
 
-    const user = await this.prisma.user.findUnique({
-      where: {
-        id: payload.sub,
-      },
-    });
+  const user = await this.prisma.user.findUnique({
+    where: { id: payload.sub },
+  })
 
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-
-    if (!user.isActive) {
-      throw new UnauthorizedException('User account is inactive.');
-    }
-
-    const newRefreshToken = await this.refreshTokenService.rotate(refreshToken);
-
-    const newPayload = this.tokenService.decode(newRefreshToken);
-
-    if (!newPayload?.tid) {
-      throw new UnauthorizedException(
-        'Failed to rotate authentication session.',
-      );
-    }
-
-    const accessToken = await this.tokenService.generateAccessToken({
-      sub: user.id,
-      email: user.email,
-      tid: newPayload.tid,
-    });
-
-    return {
-      accessToken,
-      refreshToken: newRefreshToken,
-    };
+  if (!user || !user.isActive) {
+    throw new UnauthorizedException('User not found or inactive')
   }
+
+  const accessToken = await this.tokenService.generateAccessToken({
+    sub: user.id,
+    email: user.email,
+    tid: payload.tid,
+  })
+
+  const newRefreshToken = await this.refreshTokenService.rotate(payload)
+
+  return {
+    accessToken,
+    refreshToken: newRefreshToken,
+  }
+}
 
   async logout(refreshToken: string) {
     const payload = await this.refreshTokenService.validate(refreshToken);

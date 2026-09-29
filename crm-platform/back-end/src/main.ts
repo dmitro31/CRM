@@ -18,7 +18,7 @@ async function bootstrap() {
 
   const defaultOrigins = [
     'https://www.crm-platform.site',
-    'http://localhost:3000',
+    'https://crm-platform.site',
     'http://localhost:3001',
     'http://127.0.0.1:3000',
   ];

@@ -1,14 +1,27 @@
 import { apiClient, setAccessToken } from './api-client'
-import type { LoginResponse, RefreshResponse, User, VerifyEmailResponse } from '@/types/auth'
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://crm-gr3n.onrender.com').replace(/\/$/, '')
+import type {
+  LoginResponse,
+  RefreshResponse,
+  User,
+  VerifyEmailResponse,
+} from '@/types/auth'
+
+const API_URL = (
+  process.env.NEXT_PUBLIC_API_URL ||
+  'https://crm-gr3n.onrender.com'
+).replace(/\/$/, '')
+
+let refreshPromise: Promise<RefreshResponse> | null = null
 
 export async function login(email: string, password: string) {
   const { data } = await apiClient.post<LoginResponse>('/auth/login', {
     email,
     password,
   })
+
   setAccessToken(data.accessToken)
+
   return data
 }
 
@@ -22,15 +35,20 @@ export async function register(payload: {
     '/auth/register',
     payload,
   )
+
   return data
 }
 
 export async function verifyEmail(token: string) {
   const { data } = await apiClient.get<VerifyEmailResponse>(
     '/auth/verify-email',
-    { params: { token } },
+    {
+      params: { token },
+    },
   )
+
   setAccessToken(data.accessToken)
+
   return data
 }
 
@@ -39,13 +57,24 @@ export async function resendVerification(email: string) {
     '/auth/resend-verification',
     { email },
   )
+
   return data
 }
 
 export async function refresh() {
-  const { data } = await apiClient.post<RefreshResponse>('/auth/refresh')
-  setAccessToken(data.accessToken)
-  return data
+  if (!refreshPromise) {
+    refreshPromise = apiClient
+      .post<RefreshResponse>('/auth/refresh')
+      .then(({ data }) => {
+        setAccessToken(data.accessToken)
+        return data
+      })
+      .finally(() => {
+        refreshPromise = null
+      })
+  }
+
+  return refreshPromise
 }
 
 export async function fetchMe() {
@@ -67,6 +96,7 @@ export async function forgotPassword(email: string) {
     '/auth/forgot-password',
     { email },
   )
+
   return data
 }
 
@@ -75,6 +105,7 @@ export async function resetPassword(token: string, password: string) {
     '/auth/reset-password',
     { token, password },
   )
+
   return data
 }
 
