@@ -13,25 +13,6 @@ export default function Footer() {
               CRM без коду — модулі, автоматизація й AI-асистент, зібрані під
               потреби вашого бізнесу.
             </p>
-
-            <div className="pt-2">
-              <p className="text-[12px] font-medium text-[#171A18]">
-                Підпишіться на оновлення продукту
-              </p>
-              <form className="mt-2 flex max-w-sm items-center gap-2">
-                <input
-                  type="email"
-                  placeholder="Ваш email"
-                  className="w-full rounded-md border border-[#DFE3DC] bg-[#FAFBF9] px-3 py-2 text-[13px] text-[#171A18] placeholder-[#8B9088] outline-none transition-colors focus:border-[#24493B]"
-                />
-                <button
-                  type="submit"
-                  className="flex h-9 shrink-0 items-center justify-center rounded-md bg-[#24493B] px-3.5 text-[12px] font-medium text-white transition-colors hover:bg-[#1C392E]"
-                >
-                  <ArrowRight size={14} />
-                </button>
-              </form>
-            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:col-span-8">
@@ -39,7 +20,6 @@ export default function Footer() {
               title="Продукт"
               links={[
                 { label: 'Можливості', href: '/features' },
-                { label: 'Тарифи', href: '/pricing' },
                 { label: 'Інтеграції', href: '/integrations' },
                 { label: 'Оновлення', href: '/changelog' },
                 { label: 'Roadmap', href: '/roadmap' },

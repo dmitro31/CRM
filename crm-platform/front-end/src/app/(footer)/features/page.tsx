@@ -1,11 +1,9 @@
 import Link from 'next/link'
+import Footer from '@/features/footer/Footer'
 import {
   Layers, Workflow, Sparkles, Database, Filter,
-  Paperclip, MessageSquare, Search, ArrowRight,
+  Paperclip, MessageSquare, Search, ArrowRight, ArrowLeft
 } from 'lucide-react'
-
-import Logo from '@/features/header/logo'
-import Footer from '@/features/footer/Footer'
 
 const FEATURES = [
   {
@@ -60,9 +58,19 @@ const FEATURES = [
 
 export default function FeaturesPage() {
   return (
-    <div className="min-h-screen bg-[#F6F7F4] text-[#171A18]">
-      <section className="mx-auto max-w-2xl px-8 pb-14 pt-20 text-center">
-        <h1 className="text-[36px] font-medium leading-[1.15] tracking-tight">
+    <div className="flex min-h-screen flex-col bg-[#F6F7F4] text-[#171A18]">
+      <div className="mx-auto w-full max-w-5xl px-6 pt-12">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-[13px] font-medium text-[#6C716A] transition-colors hover:text-[#171A18]"
+        >
+          <ArrowLeft size={14} />
+          На головну
+        </Link>
+      </div>
+
+      <section className="mx-auto max-w-2xl px-8 pb-14 pt-10 text-center">
+        <h1 className="text-[36px] font-medium leading-[1.15] tracking-tight sm:text-[42px]">
           Усе, що потрібно, щоб CRM працювала так, як твій бізнес
         </h1>
         <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-[#6C716A]">
@@ -72,12 +80,14 @@ export default function FeaturesPage() {
 
       <section className="border-t border-[#DFE3DC] bg-white">
         <div className="mx-auto grid max-w-5xl gap-px bg-[#DFE3DC] px-8 py-px sm:grid-cols-2">
-          {FEATURES.map(feature => (
+          {FEATURES.map((feature) => (
             <div key={feature.title} className="bg-white px-8 py-10">
               <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[#E7EEE9] text-[#24493B]">
                 {feature.icon}
               </div>
-              <h3 className="mt-4 text-[16px] font-medium text-[#171A18]">{feature.title}</h3>
+              <h3 className="mt-4 text-[16px] font-medium text-[#171A18]">
+                {feature.title}
+              </h3>
               <p className="mt-2 text-[13.5px] leading-relaxed text-[#6C716A]">
                 {feature.description}
               </p>
@@ -85,6 +95,26 @@ export default function FeaturesPage() {
           ))}
         </div>
       </section>
+
+      <section className="border-t border-[#DFE3DC] bg-[#FAFBF9] py-16 text-center">
+        <div className="mx-auto max-w-md px-6">
+          <h2 className="text-[22px] font-medium text-[#171A18]">Готові спробувати?</h2>
+          <p className="mt-2 text-[13px] text-[#6C716A]">
+            Створіть свій перший workspace за 1 хвилину.
+          </p>
+          <div className="mt-6 flex justify-center gap-3">
+            <Link
+              href="/register"
+              className="inline-flex items-center gap-2 rounded-md bg-[#24493B] px-5 py-2.5 text-[13px] font-medium text-white transition-colors hover:bg-[#1C392E]"
+            >
+              Спробувати безкоштовно
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
     </div>
   )
 }
