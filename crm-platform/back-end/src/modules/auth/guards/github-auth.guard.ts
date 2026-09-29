@@ -1,4 +1,4 @@
-import { Injectable, ExecutionContext } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
@@ -9,11 +9,9 @@ export class GithubAuthGuard extends AuthGuard('github') {
     });
   }
 
-  handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
+  handleRequest<TUser = any>(err: any, user: any): TUser {
     if (err || !user) {
-      const res = context.switchToHttp().getResponse();
-      const frontendUrl = ('https://www.crm-platform.site').replace(/\/$/, '');
-      return res.redirect(`${frontendUrl}/login?error=oauth_failed`);
+      throw err || new UnauthorizedException('GitHub authentication failed');
     }
     return user;
   }
