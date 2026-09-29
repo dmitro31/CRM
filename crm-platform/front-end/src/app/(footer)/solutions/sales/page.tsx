@@ -50,7 +50,6 @@ export default function SalesSolutionPage() {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

@@ -49,7 +49,6 @@ export default function ChangelogPage() {
           />
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

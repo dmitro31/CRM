@@ -44,7 +44,6 @@ export default function TermsPage() {
           </section>
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

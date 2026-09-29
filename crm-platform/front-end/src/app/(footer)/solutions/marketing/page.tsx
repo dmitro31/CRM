@@ -50,7 +50,6 @@ export default function MarketingSolutionPage() {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

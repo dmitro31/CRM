@@ -66,7 +66,6 @@ export default function ApiDocsPage() {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

@@ -69,7 +69,6 @@ export default function RoadmapPage() {
           ))}
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

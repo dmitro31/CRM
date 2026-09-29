@@ -44,7 +44,6 @@ export default function PrivacyPage() {
           </section>
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

@@ -90,7 +90,6 @@ export default function AboutPage() {
           </ul>
         </section>
       </div>
-      <Footer />
     </div>
   )
 }

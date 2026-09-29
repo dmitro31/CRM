@@ -50,7 +50,6 @@ export default function StartupsSolutionPage() {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

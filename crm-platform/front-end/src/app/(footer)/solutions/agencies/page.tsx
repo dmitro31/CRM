@@ -50,7 +50,6 @@ export default function AgenciesSolutionPage() {
           </div>
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

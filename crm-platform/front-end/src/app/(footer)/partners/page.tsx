@@ -63,7 +63,6 @@ export default function PartnersPage() {
           </Link>
         </div>
       </div>
-      <Footer />
     </div>
   )
 }
