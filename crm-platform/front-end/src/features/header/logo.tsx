@@ -16,7 +16,7 @@ export default function Logo() {
         </svg>
 
         <h1 className="text-[19px] font-medium tracking-tight text-[#171A18]">
-          BoostFlow
+          ASTRA
         </h1>
       </div>
     </Link>

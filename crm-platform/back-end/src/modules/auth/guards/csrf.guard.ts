@@ -20,7 +20,7 @@ export class CsrfGuard implements CanActivate {
       return true;
     }
 
-    // 2. Ігноруємо ендпоінти авторизації
+
     const publicPaths = ['/auth/login', '/auth/register', '/auth/refresh', '/auth/csrf'];
     if (publicPaths.some((path) => url.includes(path))) {
       return true;

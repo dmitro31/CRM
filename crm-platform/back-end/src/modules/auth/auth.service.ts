@@ -587,7 +587,7 @@ async refresh(refreshToken: string) {
     const payload = this.tokenService.decode(refreshToken);
 
     if (!payload?.tid) {
-      throw new UnauthorizedException(
+      throw new UnauthorizedException(  
         'Failed to create authentication session.',
       );
     }
